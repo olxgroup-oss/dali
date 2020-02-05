@@ -1,0 +1,7 @@
+# (c) Copyright 2019-2020 OLX
+
+/target
+**/*.rs.bk
+.vscode
+.idea
+.DS_Store

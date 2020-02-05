@@ -1,0 +1,30 @@
+# (c) Copyright 2019-2020 OLX
+[package]
+name = "dali"
+version = "1.0.0"
+authors = ["Augusto César Dias <augusto.dias@olx.com>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.3.2"
+actix-web = "2.0.0"
+actix-rt = "1.0.0"
+actix-service = "1.0.5"
+actix-http = "1.0.1"
+num_cpus = "1.12.0"
+prometheus = {version = "0.7.0", features = ["process", "nightly"] }
+prometheus-static-metric = "0.2"
+log = "0.4.8"
+env_logger = "0.7.1"
+chrono = "0.4.10"
+serde = "1.0.104"
+serde_derive = "1.0.104"
+serde_json = "1.0.46"
+serde_qs = {version = "0.5.2", features=["actix"]}
+config = "0.10.1"
+libvips = "1.1.4"
+hyper = "0.13.2"
+hyper-timeout = "0.3"
+rexif = "0.5.0"
+lazy_static = "1.4.0"
+

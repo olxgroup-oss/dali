@@ -1,0 +1,11 @@
+{
+    "app_port": 8080,
+    "health_port": 8081,
+    "log_level": "info",
+    "server_client_timeout": 1000,
+    "client_shutdown_timeout": 1000,
+    "server_keep_alive": 1000,
+    "http_client_con_timeout": 1000,
+    "http_client_read_timeout": 1000,
+    "http_client_write_timeout": 1000
+}

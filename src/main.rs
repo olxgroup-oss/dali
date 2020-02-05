@@ -1,0 +1,325 @@
+// (c) Copyright 2019-2020 OLX
+#[macro_use]
+
+mod commons;
+mod image_processor;
+
+use commons::config::Configuration;
+use commons::*;
+
+use actix_http::KeepAlive;
+use actix_service::Service;
+use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
+use chrono::Utc;
+use futures::future::join_all;
+use image_processor::*;
+use lazy_static::*;
+use libvips::VipsApp;
+use log::*;
+use prometheus::*;
+use prometheus_static_metric::*;
+use std::{
+    env,
+    iter::once,
+    time::{Duration, SystemTime},
+};
+
+make_static_metric! {
+    pub struct HttpRequestDuration: Histogram {
+        "status" => {
+            success,
+            client_error,
+            server_error,
+        }
+    }
+    pub struct FetchRequestDuration: Histogram {
+        "status" => {
+            success,
+        }
+    }
+    pub struct InputSize: Histogram {
+        "format" => {
+            jpeg,
+            png,
+            webp,
+            heic,
+        }
+    }
+    pub struct OutputSize: Histogram {
+        "format" => {
+            jpeg,
+            png,
+            webp,
+            heic,
+        }
+    }
+}
+
+lazy_static! {
+    pub static ref HTTP_DURATION_VEC: HistogramVec = register_histogram_vec!(
+        "dali_http_requests_duration",
+        "Duration of each HTTP request.",
+        &["status"]
+    )
+    .expect("Cannot register metric");
+    pub static ref FETCH_DURATION_VEC: HistogramVec = register_histogram_vec!(
+        "dali_fetch_requests_duration",
+        "Duration of the image fetch request(s).",
+        &["status"]
+    )
+    .expect("Cannot register metric");
+    pub static ref INPUT_SIZE_VEC: HistogramVec = register_histogram_vec!(
+        "dali_input_size",
+        "Number of bytes read from HTTP",
+        &["format"]
+    )
+    .expect("Cannot register metric");
+    pub static ref OUTPUT_SIZE_VEC: HistogramVec = register_histogram_vec!(
+        "dali_output_size",
+        "Number of bytes sent to clients",
+        &["format"]
+    )
+    .expect("Cannot register metric");
+    pub static ref HTTP_DURATION: HttpRequestDuration =
+        HttpRequestDuration::from(&HTTP_DURATION_VEC);
+    pub static ref FETCH_DURATION: FetchRequestDuration =
+        FetchRequestDuration::from(&FETCH_DURATION_VEC);
+    pub static ref INPUT_SIZE: InputSize = InputSize::from(&INPUT_SIZE_VEC);
+    pub static ref OUTPUT_SIZE: OutputSize = OutputSize::from(&OUTPUT_SIZE_VEC);
+}
+
+async fn index(
+    req: HttpRequest,
+    query: ProcessImageRequest,
+    http_client: web::Data<http::HyperClient>,
+    vips_data: web::Data<VipsApp>,
+) -> actix_web::Result<HttpResponse> {
+    let now = SystemTime::now();
+    debug!("Request parameters: {:?}", query);
+    let uri = req.uri();
+    let format = query.format;
+    let x_trace = String::from(
+        req.headers()
+            .get("x-trace")
+            .map(|h| h.to_str().unwrap_or_else(|_| "EMPTY"))
+            .unwrap_or_else(|| "EMPTY"),
+    );
+
+    let img_futures = query
+        .watermarks
+        .iter()
+        .map(|wm| http::get_file(&http_client, &wm.image_address));
+    let main_img_fut = http::get_file(&http_client, &query.image_address);
+    let buffers = join_all(once(main_img_fut).chain(img_futures))
+        .await
+        .into_iter()
+        .collect::<actix_web::Result<Vec<_>>>()?;
+    if let Ok(elapsed) = now.elapsed() {
+        let duration =
+            (elapsed.as_secs() as f64) + f64::from(elapsed.subsec_nanos()) / 1_000_000_000_f64;
+        FETCH_DURATION.success.observe(duration);
+    }
+    match web::block(move || {
+        let mut input_size = 0;
+        let result = process_image(&buffers[0], &buffers[1..], query, &mut input_size);
+        match format {
+            ImageFormat::Jpeg => INPUT_SIZE.jpeg.observe(input_size as f64),
+            ImageFormat::Heic => INPUT_SIZE.heic.observe(input_size as f64),
+            ImageFormat::Webp => INPUT_SIZE.webp.observe(input_size as f64),
+            ImageFormat::Png => INPUT_SIZE.png.observe(input_size as f64),
+        }
+        result
+    })
+    .await
+    {
+        Err(e) => {
+            let error_str = format!("{}", e).replace("\"", "\\\"");
+            error!(
+                r#"{{"x-trace": "{}", "uri": "{}", "msg": "Error processing request: {}", "vips_error_buffer": "{}"}}"#,
+                x_trace,
+                uri,
+                error_str,
+                vips_data.error_buffer().unwrap_or("").replace("\n", ". ")
+            );
+            Err(actix_web::error::ErrorInternalServerError(e))
+        }
+        Ok(res_body) => {
+            match format {
+                ImageFormat::Jpeg => OUTPUT_SIZE.jpeg.observe(res_body.len() as f64),
+                ImageFormat::Heic => OUTPUT_SIZE.heic.observe(res_body.len() as f64),
+                ImageFormat::Webp => OUTPUT_SIZE.webp.observe(res_body.len() as f64),
+                ImageFormat::Png => OUTPUT_SIZE.png.observe(res_body.len() as f64),
+            }
+            Ok(HttpResponse::Ok()
+                .content_type(format!("image/{}", format).as_str())
+                .body(Body::from(res_body)))
+        }
+    }
+}
+
+async fn health() -> HttpResponse {
+    HttpResponse::Ok().finish()
+}
+
+async fn metrics() -> HttpResponse {
+    let registry = prometheus::default_registry();
+    let mut buffer = vec![];
+    match TextEncoder::new().encode(&registry.gather(), &mut buffer) {
+        Ok(()) => HttpResponse::Ok()
+            .content_type("text/plain")
+            .body(Body::from(buffer)),
+        Err(e) => HttpResponse::from_error(actix_web::error::ErrorInternalServerError(e)),
+    }
+}
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    let config = Configuration::new().expect("Failed to load application configuration.");
+    println!(r#"{{"configuration": {}}}"#, config);
+    let config_data = web::Data::new(config);
+    let name = "dali";
+    env::set_var(
+        "RUST_LOG",
+        config_data
+            .log_level
+            .as_ref()
+            .unwrap_or(&"info".to_string()),
+    );
+    env_logger::builder()
+        .filter_module("actix_http::response", log::LevelFilter::Off)
+        .target(env_logger::Target::Stdout)
+        .format(|f, record| {
+            use std::io::Write;
+            let message = record.args().to_string();
+            let as_json = match message.chars().next() {
+                Some('{') => message,
+                _ => format!(r#""{}""#, message),
+            };
+            writeln!(
+                f,
+                r#"{{"timestamp": {}, "level": "{}","target": "{}","message": {}}}"#,
+                Utc::now().timestamp_millis(),
+                record.level(),
+                record.target(),
+                as_json,
+            )
+        })
+        .init();
+    let cpus = num_cpus::get();
+    let mut available_threads = if let Some(max_threads) = config_data.max_threads {
+        max_threads
+    } else {
+        cpus as u16
+    };
+    if available_threads < 2 {
+        available_threads = 2;
+    }
+    let vips_threads = if let Some(vips_threads) = config_data.vips_threads {
+        vips_threads
+    } else {
+        available_threads / 2
+    };
+    let app_threads = if let Some(app_threads) = config_data.app_threads {
+        app_threads as usize
+    } else {
+        available_threads as usize / 2
+    };
+    let metrics_threads = if let Some(metrics_threads) = config_data.metrics_threads {
+        metrics_threads as usize
+    } else {
+        1
+    };
+    println!(
+        r#"{{"num_cpus": {}, "application_threads": {}, "vips_threads": {}, "metrics_threads": {}, "message": "dali initialized" }}"#,
+        cpus, app_threads, vips_threads, metrics_threads
+    );
+    let app = VipsApp::new(name, false).expect("Cannot initialize libvips");
+    app.concurrency_set(vips_threads as i32);
+    app.cache_set_max(0);
+    app.cache_set_max_mem(0);
+
+    let hyper_builder = hyper::Client::builder();
+    let http_connector = hyper::client::HttpConnector::new();
+    let mut http_timeout_connector = hyper_timeout::TimeoutConnector::new(http_connector);
+    http_timeout_connector.set_connect_timeout(
+        config_data
+            .http_client_con_timeout
+            .map(Duration::from_millis),
+    );
+    http_timeout_connector.set_write_timeout(
+        config_data
+            .http_client_con_timeout
+            .map(Duration::from_millis),
+    );
+    http_timeout_connector.set_read_timeout(
+        config_data
+            .http_client_con_timeout
+            .map(Duration::from_millis),
+    );
+    let hyper_http_client = hyper_builder.build::<_, hyper::Body>(http_timeout_connector);
+    let http_client_data = web::Data::new(hyper_http_client);
+    //accept url encoded with brackets or their encoded equivalents
+    let qs_config = serde_qs::Config::new(5, false);
+    let qs_config_data = web::Data::new(qs_config);
+    let vips_data = web::Data::new(app);
+    let app_port = config_data.app_port;
+    let health_port = config_data.health_port;
+
+    let client_timeout = config_data.server_client_timeout.unwrap_or(5000);
+    let client_shutdown_timeout = config_data.client_shutdown_timeout.unwrap_or(5000);
+    let server_keep_alive = config_data
+        .server_keep_alive
+        .map(KeepAlive::from)
+        .unwrap_or(KeepAlive::Os);
+
+    let server_metrics = HttpServer::new(move || {
+        App::new()
+            .service(web::resource("/metrics").route(web::get().to(metrics)))
+            .service(web::resource("/health").route(web::get().to(health)))
+    })
+    .bind(format!("0.0.0.0:{}", health_port))?
+    .workers(metrics_threads)
+    .client_timeout(client_timeout)
+    .client_shutdown(client_shutdown_timeout)
+    .keep_alive(server_keep_alive)
+    .run();
+
+    let server_main = HttpServer::new(move || {
+        App::new()
+            .app_data(http_client_data.clone())
+            .app_data(qs_config_data.clone())
+            .app_data(vips_data.clone())
+            .wrap_fn(|req, srv| {
+                let now = SystemTime::now();
+                let fut = srv.call(req);
+                async move {
+                    let res = fut.await?;
+                    if let Ok(elapsed) = now.elapsed() {
+                        let duration = (elapsed.as_secs() as f64) + f64::from(elapsed.subsec_nanos()) / 1_000_000_000_f64;
+                        if res.status().is_client_error() {
+                            HTTP_DURATION.client_error.observe(duration);
+                        } else if res.status().is_server_error() {
+                            HTTP_DURATION.server_error.observe(duration);
+                        } else {
+                            HTTP_DURATION.success.observe(duration);
+                        }
+                    }
+                    Ok(res)
+                }
+            })
+            .wrap(
+                actix_web::middleware::Logger::new(
+                    r#"{"remote-addr": "%a","status": %s,"content-length": "%b","request-duration": %D,"client-id": "%{X-ClientId}i","x-trace": "%{x-trace}i","referer": "%{Referer}i","user-agent": "%{User-Agent}i"}"#,
+                ),
+            )
+            .service(web::resource("/").route(web::get().to(index)))
+    })
+    .bind(format!("0.0.0.0:{}", app_port))?
+    .workers(app_threads)
+    .keep_alive(server_keep_alive)
+    .client_timeout(client_timeout)
+    .client_shutdown(client_shutdown_timeout)
+    .run();
+
+    server_main.await.and(Ok(server_metrics.stop(true).await))
+}
