@@ -4,7 +4,7 @@ DOCKER_ORG ?= olxgroup-oss
 
 PROJECT_NAME=dali
 
-REVISION ?= $(shell git rev-parse HEAD)
+REVISION ?= $(shell git rev-parse --short HEAD)
 ifeq ($(BUILD_NUMBER),)
 	VERSION_TAG ?= $(REVISION)
 else
