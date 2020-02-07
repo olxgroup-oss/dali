@@ -1,5 +1,7 @@
 # dali
 
+![build](https://github.com/olxgroup-oss/dali/workflows/build/badge.svg)
+
 dali (named after the great painter Salvador Dali) is a service which performs image transformations. It is used by [OLX](https://olxgroup.com) to process and serve images for users in around 40 countries.
 The application supports:
 * Retrieving source images from a HTTP URL

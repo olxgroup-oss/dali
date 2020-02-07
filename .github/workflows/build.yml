@@ -5,7 +5,7 @@ on:
     branches:
       - master
 jobs:
-  build_base_docker_image:
+  build_docker_image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -13,3 +13,9 @@ jobs:
         run: echo "${{ secrets.GPR_PUSH_TOKEN }}" | docker login docker.pkg.github.com -u ${{ secrets.GPR_USERNAME }} --password-stdin
       - name: Build and Publish to GPR
         run: make build-image
+  
+  test:
+    runs-on: ubuntu-latest
+      - uses: actions/checkout@v2
+      - name: Test
+        run: make test
