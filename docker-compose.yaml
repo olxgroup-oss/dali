@@ -1,0 +1,17 @@
+# (c) Copyright 2019-2020 OLX
+version: '3'
+services:
+  http:
+    image: nginx
+    volumes:
+      - ./tests/resources/:/usr/share/nginx/html/
+    ports:
+      - 9000:80
+  dali:
+    image: docker.pkg.github.com/olxgroup-oss/dali:${VERSION_TAG:-latest}
+    volumes:
+      - ./config:/config
+    ports: 
+      - 8080:8080
+    environment: 
+      - RUN_MODE=compose

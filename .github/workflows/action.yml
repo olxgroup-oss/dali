@@ -1,0 +1,21 @@
+# (c) Copyright 2019-2020 OLX
+name: build-base-images
+
+on:
+  push:
+    paths:
+      - Dockerfile.base
+      - Dockerfile.vips
+      - Makefile
+
+jobs:
+  build_base_docker_image:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build and Publish to GPR
+        run: make build-base-image

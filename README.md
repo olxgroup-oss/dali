@@ -45,10 +45,6 @@ For installation follow this [instructions](https://libvips.github.io/libvips/in
 
 Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup update`.
 
-Also a HTTP server container will be required to serve images for the application.
-
-```docker run -it -p 9000:9000 minio/minio server /data```
-
 To build and run the application, run the following command:
 
 ``` cargo run ```
@@ -56,7 +52,7 @@ To build and run the application, run the following command:
 _Note: if you're building the application on a `linux musl` system, you'll need to set this env variable: `RUSTFLAGS='-C target-feature=-crt-static'`_
 _if it fails to compile because of the linker, try to add the result of `pkg-config --libs vips` to `RUSTFLAGS=` env variable`_
 
-Alternatively, it is possible to run both components inside docker:
+Alternatively, it is possible to run both components inside docker (once you build them):
 
 ```make up```
 

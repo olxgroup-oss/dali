@@ -1,0 +1,13 @@
+version: '3'
+services:
+  cargo:
+    image: ${DOCKER_REGISTRY}/${DOCKER_ORG}/dali/base-rust-image:latest
+    environment: 
+        - DALI_HOST=dali
+        - HTTP_HOST=http
+        - RUSTFLAGS=-C target-feature=-crt-static -L/usr/local/lib -lvips -lgobject-2.0 -lglib-2.0 -lintl
+    volumes:
+        - ./:/src
+    working_dir: /src
+    command: cargo test --jobs 2 
+
