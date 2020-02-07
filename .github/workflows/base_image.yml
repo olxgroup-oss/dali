@@ -7,6 +7,7 @@ on:
       - Dockerfile.base
       - Dockerfile.vips
       - Makefile
+      - .github/workflows/base_image.yml
 
 jobs:
   build_base_docker_image:
