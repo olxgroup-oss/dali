@@ -6,7 +6,7 @@ WORKDIR /usr/src/dali
 COPY . .
 
 # this flag ensures that proc macro can be compiled in musl targets
-RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo install --jobs 2 --path .
+RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo install --path .
 
 FROM docker.pkg.github.com/olxgroup-oss/dali/base-dali:latest
 
