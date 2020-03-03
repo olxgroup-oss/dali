@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '!**.md'
 jobs:
   build_docker_image:
     runs-on: ubuntu-latest
