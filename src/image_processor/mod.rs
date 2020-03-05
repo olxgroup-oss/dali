@@ -22,15 +22,12 @@ pub fn process_image(
     } = parameters;
     let needs_rotation = rotation.is_some()
         || match rexif::parse_buffer_quiet(&buffer[..]).0 {
-            Ok(data) => data
-                .entries
-                .into_iter()
-                .any(|e| {
-                    e.tag == rexif::ExifTag::Orientation
-                        && e.value.to_i64(0).is_some()
-                        && e.value.to_i64(0).unwrap() != 0
-                        && e.value.to_i64(0).unwrap() != 1
-                }),
+            Ok(data) => data.entries.into_iter().any(|e| {
+                e.tag == rexif::ExifTag::Orientation
+                    && e.value.to_i64(0).is_some()
+                    && e.value.to_i64(0).unwrap() != 0
+                    && e.value.to_i64(0).unwrap() != 1
+            }),
             Err(_) => false,
         };
     let options = if !needs_rotation {
@@ -112,7 +109,8 @@ pub fn process_image(
         } else {
             wm
         };
-        final_image = ops::composite_2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
+        final_image =
+            ops::composite_2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
     }
 
     debug!("Encoding to: {}", format);

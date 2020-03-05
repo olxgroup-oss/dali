@@ -14,8 +14,7 @@ fn test_get_simple() {
 #[test]
 fn test_get_rotated() {
     let result = utils::make_request(
-        utils::RequestParametersBuilder::new("img-test")
-            .with_rotation(utils::Rotation::R270),
+        utils::RequestParametersBuilder::new("img-test").with_rotation(utils::Rotation::R270),
     )
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw_rotated.jpg");
@@ -23,10 +22,9 @@ fn test_get_rotated() {
 
 #[test]
 fn test_get_resized() {
-    let result = utils::make_request(
-        utils::RequestParametersBuilder::new("img-test").with_size(100, 100),
-    )
-    .expect("Unable to download file");
+    let result =
+        utils::make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
+            .expect("Unable to download file");
     utils::assert_result(&result[..], "resized.jpg");
 }
 
@@ -99,8 +97,7 @@ fn test_get_watermarked_rotated() {
 #[test]
 fn test_get_encoded_webp() {
     let result = utils::make_request(
-        utils::RequestParametersBuilder::new("img-test")
-            .with_format(utils::ImageFormat::Webp),
+        utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Webp),
     )
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.webp");
@@ -109,8 +106,7 @@ fn test_get_encoded_webp() {
 #[test]
 fn test_get_encoded_heic() {
     let result = utils::make_request(
-        utils::RequestParametersBuilder::new("img-test")
-            .with_format(utils::ImageFormat::Heic),
+        utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Heic),
     )
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.heic");
