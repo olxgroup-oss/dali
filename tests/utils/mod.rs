@@ -112,9 +112,9 @@ pub fn assert_result(img: &[u8], image_address: &str) {
     let img_expected =
         VipsImage::new_from_file(&file_expected).expect("Cannot load file from disk");
     let result = ops::relational(&img_result, &img_expected, ops::OperationRelational::Equal)
-    .expect("Cannot compare images");
+        .expect("Cannot compare images");
     let min = ops::min(&result).expect("Can't get min from image");
-    
+
     println!("Image diff: {}", min);
     assert!(min == 0.0);
 }
