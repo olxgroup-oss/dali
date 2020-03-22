@@ -23,8 +23,6 @@ serde_json = "1.0.48"
 serde_qs = {version = "0.5.2", features=["actix"]}
 config = "0.10.1"
 libvips = "1.1.5"
-hyper = "0.13.2"
-hyper-timeout = "0.3"
 rexif = "0.5.0"
 lazy_static = "1.4.0"
-
+awc = { version = "1.0.1", features = ["compress", "rustls"], optional = false }

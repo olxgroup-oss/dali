@@ -10,6 +10,7 @@ use commons::*;
 use actix_http::KeepAlive;
 use actix_service::Service;
 use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
+use awc::{Client, Connector};
 use chrono::Utc;
 use futures::future::join_all;
 use image_processor::*;
@@ -22,6 +23,7 @@ use std::{
     env,
     iter::once,
     time::{Duration, SystemTime},
+    thread,
 };
 
 make_static_metric! {
@@ -91,7 +93,7 @@ lazy_static! {
 async fn index(
     req: HttpRequest,
     query: ProcessImageRequest,
-    http_client: web::Data<http::HyperClient>,
+    http_client: web::Data<awc::Client>,
     vips_data: web::Data<VipsApp>,
 ) -> actix_web::Result<HttpResponse> {
     let now = SystemTime::now();
@@ -238,26 +240,6 @@ async fn main() -> std::io::Result<()> {
     app.cache_set_max(0);
     app.cache_set_max_mem(0);
 
-    let hyper_builder = hyper::Client::builder();
-    let http_connector = hyper::client::HttpConnector::new();
-    let mut http_timeout_connector = hyper_timeout::TimeoutConnector::new(http_connector);
-    http_timeout_connector.set_connect_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    http_timeout_connector.set_write_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    http_timeout_connector.set_read_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    let hyper_http_client = hyper_builder.build::<_, hyper::Body>(http_timeout_connector);
-    let http_client_data = web::Data::new(hyper_http_client);
     //accept url encoded with brackets or their encoded equivalents
     let qs_config = serde_qs::Config::new(5, false);
     let qs_config_data = web::Data::new(qs_config);
@@ -284,9 +266,24 @@ async fn main() -> std::io::Result<()> {
     .keep_alive(server_keep_alive)
     .run();
 
+    let client_timeout = config_data.http_client_con_timeout.unwrap_or(5000);
+    async fn init_client(http_client_timeout: u64) -> Result<Client> {
+        info!("Configure http client for {:?}", thread::current().id());
+        let connector = Connector::new()
+            .limit(0)
+            .finish();
+        let client = Client::build()
+            .timeout(Duration::from_millis(http_client_timeout))
+            .connector(connector)
+            .finish();
+        Ok(client)
+    }
+
     let server_main = HttpServer::new(move || {
         App::new()
-            .app_data(http_client_data.clone())
+            .data_factory(move || {
+                init_client(client_timeout)
+            })
             .app_data(qs_config_data.clone())
             .app_data(vips_data.clone())
             .wrap_fn(|req, srv| {
