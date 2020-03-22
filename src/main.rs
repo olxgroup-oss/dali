@@ -10,7 +10,7 @@ use commons::*;
 use actix_http::KeepAlive;
 use actix_service::Service;
 use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
-use awc::{Client, Connector};
+use actix_web::client::{Client, Connector};
 use chrono::Utc;
 use futures::future::join_all;
 use image_processor::*;
@@ -93,7 +93,7 @@ lazy_static! {
 async fn index(
     req: HttpRequest,
     query: ProcessImageRequest,
-    http_client: web::Data<awc::Client>,
+    http_client: web::Data<Client>,
     vips_data: web::Data<VipsApp>,
 ) -> actix_web::Result<HttpResponse> {
     let now = SystemTime::now();

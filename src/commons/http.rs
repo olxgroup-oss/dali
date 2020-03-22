@@ -2,7 +2,7 @@
 
 use actix_web::web::Bytes;
 use actix_web::Error;
-use awc::Client;
+use actix_web::client::Client;
 use log::*;
 
 pub async fn get_file(client: &Client, url: &str) -> Result<Bytes, Error> {
