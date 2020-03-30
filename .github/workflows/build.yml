@@ -7,7 +7,7 @@ on:
     branches:
       - master
     paths:
-      - '!**.md'
+      - Cargo.toml
 jobs:
   build_docker_image:
     runs-on: ubuntu-latest
