@@ -35,7 +35,7 @@ pub fn process_image(
     } else {
         ""
     };
-    *input_size += buffer.len() as u32;
+    *input_size = buffer.len() as u32;
     let source = VipsImage::image_new_from_buffer(&buffer[..], options)?;
 
     let mut final_image = if needs_rotation {
@@ -51,6 +51,9 @@ pub fn process_image(
         resize_image(source, &size)?
     };
 
+    let image_width = final_image.get_width();
+    let image_height = final_image.get_height();
+
     for (i, wm_buffer) in wm_buffers.iter().enumerate() {
         *input_size += wm_buffer.len() as u32;
         let watermark = &watermarks[i];
@@ -58,8 +61,6 @@ pub fn process_image(
         let wm =
             VipsImage::image_new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
 
-        let image_width = final_image.get_width();
-        let image_height = final_image.get_height();
         let wm_width = wm.get_width();
         let wm_height = wm.get_height();
 
