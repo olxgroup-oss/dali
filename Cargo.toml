@@ -5,6 +5,12 @@ version = "1.0.2"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2018"
 
+[features]
+default = ["hyper_client"]
+hyper_client = ["hyper", "hyper-timeout"]
+awc = []
+
+
 [dependencies]
 futures = "0.3.4"
 actix-web = "2.0.0"
@@ -23,8 +29,7 @@ serde_json = "1.0.50"
 serde_qs = {version = "0.5.2", features=["actix"]}
 config = "0.10.1"
 libvips = "1.1.5"
-hyper = "0.13.4"
-hyper-timeout = "0.3"
+hyper = { version = "0.13.4", optional = true }
+hyper-timeout = { version = "0.3", optional = true }
 rexif = "0.5.0"
 lazy_static = "1.4.0"
-

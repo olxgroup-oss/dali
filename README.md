@@ -25,6 +25,7 @@ All configuration should be provided through either a json config file or enviro
 | `http_client_con_timeout` | integer | Set the timeout for connecting to a URL | N | - | Default is no timeout |
 | `http_client_read_timeout` | integer | Set the timeout for the response | N | - | Default is no timeout |
 | `http_client_write_timeout` | integer | Set the timeout for the request | N | - | Default is no timeout |
+| `http_client_max_size_of_payload` | integer | Max size of response payload (for `awc` feature only) | N | - | Default is 256Kb |
 | `max_threads` | integer | Max number of threads the application will spawn for serving requests and processing images | N | - | If not specified it will take the number of physical CPUs from the machine |
 | `vips_threads` | integer | Max number of threads for image processing that will be used | N | - | if not specified it will take `max_threads/2` with a minimum of 1 |
 | `app_threads` | integer | Max number of threads for serving requests that will be used | N | - | if not specified it will take `max_threads/2` with a minimum of 1 |

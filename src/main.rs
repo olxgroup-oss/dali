@@ -1,5 +1,7 @@
 // (c) Copyright 2019-2020 OLX
 #[macro_use]
+#[cfg(all(feature = "hyper_client", feature = "awc"))]
+compile_error!("features `crate/hyper_client` and `crate/awc` are mutually exclusive");
 
 mod commons;
 mod image_processor;
@@ -10,6 +12,7 @@ use commons::*;
 use actix_http::KeepAlive;
 use actix_service::Service;
 use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
+
 use chrono::Utc;
 use futures::future::join_all;
 use image_processor::*;
@@ -18,11 +21,7 @@ use libvips::VipsApp;
 use log::*;
 use prometheus::*;
 use prometheus_static_metric::*;
-use std::{
-    env,
-    iter::once,
-    time::{Duration, SystemTime},
-};
+use std::{env, iter::once, time::SystemTime};
 
 make_static_metric! {
     pub struct HttpRequestDuration: Histogram {
@@ -91,8 +90,9 @@ lazy_static! {
 async fn index(
     req: HttpRequest,
     query: ProcessImageRequest,
-    http_client: web::Data<http::HyperClient>,
+    http_client: web::Data<http::client::HttpClient>,
     vips_data: web::Data<VipsApp>,
+    config: web::Data<Configuration>,
 ) -> actix_web::Result<HttpResponse> {
     let now = SystemTime::now();
     debug!("Request parameters: {:?}", query);
@@ -108,8 +108,8 @@ async fn index(
     let img_futures = query
         .watermarks
         .iter()
-        .map(|wm| http::get_file(&http_client, &wm.image_address));
-    let main_img_fut = http::get_file(&http_client, &query.image_address);
+        .map(|wm| http::client::get_file(&http_client, &wm.image_address, &config));
+    let main_img_fut = http::client::get_file(&http_client, &query.image_address, &config);
     let buffers = join_all(once(main_img_fut).chain(img_futures))
         .await
         .into_iter()
@@ -238,26 +238,6 @@ async fn main() -> std::io::Result<()> {
     app.cache_set_max(0);
     app.cache_set_max_mem(0);
 
-    let hyper_builder = hyper::Client::builder();
-    let http_connector = hyper::client::HttpConnector::new();
-    let mut http_timeout_connector = hyper_timeout::TimeoutConnector::new(http_connector);
-    http_timeout_connector.set_connect_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    http_timeout_connector.set_write_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    http_timeout_connector.set_read_timeout(
-        config_data
-            .http_client_con_timeout
-            .map(Duration::from_millis),
-    );
-    let hyper_http_client = hyper_builder.build::<_, hyper::Body>(http_timeout_connector);
-    let http_client_data = web::Data::new(hyper_http_client);
     //accept url encoded with brackets or their encoded equivalents
     let qs_config = serde_qs::Config::new(5, false);
     let qs_config_data = web::Data::new(qs_config);
@@ -284,9 +264,16 @@ async fn main() -> std::io::Result<()> {
     .keep_alive(server_keep_alive)
     .run();
 
+    let client_timeout = config_data.http_client_con_timeout.unwrap_or(5000);
+
+    #[cfg(feature = "hyper_client")]
+    let http_client = http::client::init_client(client_timeout)
+        .await
+        .expect("Can't initilize http client");
+
     let server_main = HttpServer::new(move || {
-        App::new()
-            .app_data(http_client_data.clone())
+        let mut app = App::new()
+            .app_data(config_data.clone())
             .app_data(qs_config_data.clone())
             .app_data(vips_data.clone())
             .wrap_fn(|req, srv| {
@@ -312,7 +299,23 @@ async fn main() -> std::io::Result<()> {
                     r#"{"remote-addr": "%a","status": %s,"content-length": "%b","request-duration": %D,"client-id": "%{X-ClientId}i","x-trace": "%{x-trace}i","referer": "%{Referer}i","user-agent": "%{User-Agent}i"}"#,
                 ),
             )
-            .service(web::resource("/").route(web::get().to(index)))
+            .service(web::resource("/").route(web::get().to(index)));
+
+        // one global http client for all threads/workers
+        #[cfg(feature = "hyper_client")]
+        {
+            app = app.data(http_client.clone());
+        }
+
+        // one http client per thread/worker
+        #[cfg(feature = "awc")]
+        {
+            app = app.data_factory(move || {
+                http::client::init_client(client_timeout)
+            });
+        }
+
+        app
     })
     .bind(format!("0.0.0.0:{}", app_port))?
     .workers(app_threads)

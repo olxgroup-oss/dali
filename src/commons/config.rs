@@ -16,6 +16,8 @@ pub struct Configuration {
     pub http_client_con_timeout: Option<u64>,
     pub http_client_read_timeout: Option<u64>,
     pub http_client_write_timeout: Option<u64>,
+    // https://docs.rs/awc/2.0.0-alpha.1/awc/struct.MessageBody.html#method.limit
+    pub http_client_max_size_of_payload: Option<u64>,
     pub max_threads: Option<u16>,
     pub vips_threads: Option<u16>,
     pub app_threads: Option<u16>,
