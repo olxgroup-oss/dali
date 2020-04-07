@@ -1,0 +1,6 @@
+# (c) Copyright 2019-2020 OLX
+---
+  include:
+    - project: 'shared-services/core-services/dali-ci-template'
+      file: '.gitlab-ci-template.yml'
+  

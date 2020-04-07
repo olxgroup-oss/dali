@@ -1,7 +1,7 @@
 version: '3'
 services:
   cargo:
-    image: ${DOCKER_REGISTRY}/${DOCKER_ORG}/dali/base-rust-image:latest
+    image: ${BUILD_IMAGE:-docker.pkg.github.com/olxgroup-oss/dali/base-rust-image}:latest
     environment: 
         - DALI_HOST=dali
         - HTTP_HOST=http
@@ -10,4 +10,3 @@ services:
         - ./:/src
     working_dir: /src
     command: cargo test
-
