@@ -4,7 +4,7 @@ FROM alpine:3.11
 
 ENV VIPS_VERSION=8.9.2
 
-RUN apk add --update --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community --virtual .build-deps \
+RUN apk add --update --no-cache --virtual .build-deps \
             build-base \
             pkgconfig \
             glib-dev \
@@ -30,7 +30,7 @@ RUN apk add --update --no-cache --repository=http://dl-cdn.alpinelinux.org/alpin
     rm -rf /vips && rm -f /vips-${VIPS_VERSION}.tar.gz  && \
     apk del .build-deps && \
     apk add --update --no-cache libgsf glib expat tiff libjpeg-turbo libexif giflib librsvg lcms2 libpng orc libwebp libheif && \
-    apk add --update --no-cache libimagequant --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community && \
+    apk add --update --no-cache libimagequant && \
     export GI_TYPELIB_PATH=/usr/local/lib/girepository-1.0
 
 CMD /usr/local/bin/vips
