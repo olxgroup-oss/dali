@@ -814,7 +814,7 @@ dependencies = [
 
 [[package]]
 name = "dali"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "actix-http 1.0.1",
  "actix-rt 1.1.1",
