@@ -108,7 +108,7 @@ impl RequestParametersBuilder {
 pub fn assert_result(img: &[u8], image_address: &str) {
     let file_expected = format!("tests/results/{}", image_address);
     let img_result =
-        VipsImage::image_new_from_buffer(img, "").expect("Unable to read image from dali");
+        VipsImage::new_from_buffer(img, "").expect("Unable to read image from dali");
     let img_expected =
         VipsImage::new_from_file(&file_expected).expect("Cannot load file from disk");
     let result = ops::relational(&img_result, &img_expected, ops::OperationRelational::Equal)
