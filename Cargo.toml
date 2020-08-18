@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2020 OLX
 [package]
 name = "dali"
-version = "1.0.4"
+version = "1.0.5"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2018"
 
@@ -11,24 +11,24 @@ hyper_client = ["hyper", "hyper-timeout"]
 awc = []
 
 [dependencies]
-futures = "0.3.4"
+futures = "0.3.5"
 actix-web = "2.0.0"
 actix-rt = "1.1.1"
-actix-service = "1.0.5"
+actix-service = "1.0.6"
 actix-http = "1.0.1"
 num_cpus = "1.13.0"
-prometheus = {version = "0.8.0", features = ["process", "nightly"] }
-prometheus-static-metric = "0.2"
-log = "0.4.8"
+prometheus = {version = "0.9.0", features = ["process", "nightly"] }
+prometheus-static-metric = "0.2.0"
+log = "0.4.11"
 env_logger = "0.7.1"
-chrono = "0.4.11"
-serde = "1.0.106"
-serde_derive = "1.0.106"
-serde_json = "1.0.52"
-serde_qs = {version = "0.5.2", features=["actix"]}
+chrono = "0.4.15"
+serde = "1.0.115"
+serde_derive = "1.0.115"
+serde_json = "1.0.57"
+serde_qs = {version = "0.6.1", features=["actix"]}
 config = "0.10.1"
-hyper = { version = "0.13.5", optional = true }
-hyper-timeout = { version = "0.3", optional = true }
-libvips = "1.3.0"
+hyper = { version = "0.13.7", optional = true }
+hyper-timeout = { version = "0.3.1", optional = true }
+libvips = "1.4.0"
 rexif = "0.5.0"
 lazy_static = "1.4.0"

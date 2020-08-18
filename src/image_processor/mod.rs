@@ -36,7 +36,7 @@ pub fn process_image(
         ""
     };
     *input_size = buffer.len() as u32;
-    let source = VipsImage::image_new_from_buffer(&buffer[..], options)?;
+    let source = VipsImage::new_from_buffer(&buffer[..], options)?;
 
     let mut final_image = if needs_rotation {
         let exif_rotated = ops::autorot(&source)?;
@@ -59,7 +59,7 @@ pub fn process_image(
         let watermark = &watermarks[i];
         debug!("Applying watermark: {:?}", watermark);
         let wm =
-            VipsImage::image_new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
+            VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
 
         let wm_width = wm.get_width();
         let wm_height = wm.get_height();
