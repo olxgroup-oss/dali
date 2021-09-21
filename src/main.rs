@@ -141,7 +141,11 @@ async fn index(
                 error_str,
                 vips_data.error_buffer().unwrap_or("").replace("\n", ". ")
             );
-            Err(actix_web::error::ErrorInternalServerError(e))
+            let error_response = match e {
+                actix_web::error::BlockingError::Error(libvips::error::Error::InitializationError(_)) => actix_web::error::ErrorBadRequest(e),
+                _ => actix_web::error::ErrorInternalServerError(e)
+            };
+            Err(error_response)
         }
         Ok(res_body) => {
             match format {
