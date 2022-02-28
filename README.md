@@ -4,7 +4,8 @@
 
 dali (named after the great painter Salvador Dali) is a service which performs image transformations. It is used by [OLX](https://olxgroup.com) to process and serve images for users in around 40 countries.
 The application supports:
-* Retrieving source images from a HTTP URL
+
+* Retrieving source images from an HTTP URL
 * Encoding images to PNG, JPEG, WEBP or HEIC
 * Resizing an image
 * Rotating an image
@@ -31,12 +32,12 @@ All configuration should be provided through either a json config file or enviro
 | `app_threads` | integer | Max number of threads for serving requests that will be used | N | - | if not specified it will take `max_threads/2` with a minimum of 1 |
 | `metrics_threads` | integer | Max number of threads for serving the `health` and `metrics` endpoints | N | - | Defaults to 1 |
 
-
 The application will compute the number of threads by the following formula: `pod_number_of_cpus * cpu_usage_percentage / 100`. This number will be divided by 2 and half will be assigned to the HTTP connection listener and half will be assigned to `libvips` (the image library). An extra worker will be created to listen to the `health` endpoint (this was done to be sure the application won't block the `health` endpoint even when overloaded).
 
 ## Running locally
 
 ### Requirements
+
 * Libvips
 * A HTTP server for images
 * Docker
@@ -44,7 +45,7 @@ The application will compute the number of threads by the following formula: `po
 
 This application relies on C libvips library. That means it has to be previously installed into the system before compiling and/or running.
 
-For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.8.3)
+For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.10.1)
 
 Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup update`.
 
@@ -70,8 +71,8 @@ To run them, simply execute: `cargo test --bin dali`. The parameter `--bin` is n
 
 ### Integration Tests
 
-This tests run over a running application. 
-To run the tests, the script will start the containers through `docker-compose`, copy some sample files to the `http` container and run the tests over the application, checking the array of bytes from the responses against expected result images stored in the `tests/resources/results` directory. To run the whole flow, simply run: `make test`. 
+This tests run over a running application.
+To run the tests, the script will start the containers through `docker-compose`, copy some sample files to the `http` container and run the tests over the application, checking the array of bytes from the responses against expected result images stored in the `tests/resources/results` directory. To run the whole flow, simply run: `make test`.
 
 ### Benchmark Tests
 
@@ -82,7 +83,7 @@ rustup toolchain install nightly
 rustup default nightly
 ```
 
-To rollback to stable, run `rustup default stable`. 
+To rollback to stable, run `rustup default stable`.
 
 To run the benchmark, simply call `cargo bench` (application must be running at localhost on port 8080).
 
@@ -95,15 +96,19 @@ It outputs the average time per iteration and the deviation between max and min.
 The application supports the following endpoints.
 
 ### `/health`
+
 Signifies the application is healthy by returning a HTTP Status OK - 200 return code.
 
 ### `/metrics`
+
 Prometheus formatted metrics. Currently exposes request count and duration per endpoint
 
 ### `/`
+
 Fetches and processes an image file. The only mandatory parameter is the `image_address`.
 
 #### General query parameters
+
 | Parameter | Description |
 |-----------------|-------------|
 | `image_address` | The address for the Image. Should be a HTTP, HTTPS or HTTP valid URI. |
@@ -127,6 +132,6 @@ Watermarks is an array parameter and therefore, must be indexed when informed (0
 | `watermarks[0][position][y][pos]` | position of the watermark in the Y axis. Value in pixels. |
 | `watermarks[0][size]` | optional size of the watermark. It should be a value between 1 and 100 representing a percentage from the original image. |
 
-# License
+## License
 
 (c) Copyright 2019-2020 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
