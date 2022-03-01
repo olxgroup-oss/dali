@@ -16,7 +16,7 @@ actix-web = "2.0.0"
 actix-rt = "1.1.1"
 actix-service = "1.0.6"
 actix-http = "1.0.1"
-num_cpus = "1.13.0"
+num_cpus = "1.13.1"
 prometheus = {version = "0.10.0", features = ["process", "nightly"] }
 prometheus-static-metric = "0.5.1"
 log = "0.4.11"
