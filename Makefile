@@ -28,6 +28,10 @@ test:
 		-f docker-compose.yaml -f docker-compose.tests.yaml \
 		up --no-recreate --remove-orphans --exit-code-from cargo
 
+run:
+	RUSTFLAGS="-C target-feature=-crt-static $(shell pkg-config vips --libs)" cargo build
+	./target/debug/dali
+
 build-base-image:
 	$(SUDO) docker build -f Dockerfile.base -t "$(BUILD_IMAGE):$(VERSION_TAG)" .
 	$(SUDO) docker build -f Dockerfile.vips -t "$(BASE_IMAGE):$(VERSION_TAG)" .
