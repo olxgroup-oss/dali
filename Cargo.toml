@@ -20,7 +20,7 @@ num_cpus = "1.13.1"
 prometheus = {version = "0.13.0", features = ["process"] }
 prometheus-static-metric = "0.5.1"
 log = "0.4.14"
-env_logger = "0.7.1"
+env_logger = "0.9.0"
 chrono = "0.4.15"
 serde = "1.0.115"
 serde_derive = "1.0.115"
