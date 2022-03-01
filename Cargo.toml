@@ -11,7 +11,7 @@ hyper_client = ["hyper", "hyper-timeout"]
 awc = []
 
 [dependencies]
-futures = "0.3.5"
+futures = "0.3.21"
 actix-web = "2.0.0"
 actix-rt = "1.1.1"
 actix-service = "1.0.6"
