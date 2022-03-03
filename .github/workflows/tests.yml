@@ -11,6 +11,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    container: rust:1.59.0-slim
     services:
       nginx:
         image: nginx:latest
@@ -19,9 +20,6 @@ jobs:
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
       - name: Docker login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: libvip
