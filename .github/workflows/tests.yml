@@ -22,8 +22,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: libvip
         run: |
-          sudo apt-get update
-          sudo apt install -y \
+          apt-get update
+          apt install -y \
             libvips-dev \
             libvips \
             make
