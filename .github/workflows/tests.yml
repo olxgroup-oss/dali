@@ -13,27 +13,21 @@ jobs:
     runs-on: ubuntu-latest
     container: rust:1.59.0-slim
     services:
-      nginx:
+      backend:
         image: nginx:latest
-        ports:
-          - 9000:80
-        options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/
+        options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
       - uses: actions/checkout@v2
-      - name: libvip
-        run: |
-          apt-get update
-          apt install -y \
-            libvips-dev \
-            libvips \
-            make
+      - name: Restart nginx
+        uses: docker://docker
+        with:
+          args: docker restart backend
       - name: Test
         run: |
+          apt-get update && apt install -y libvips-dev libvips make curl
+          curl http://backend/exif --output /dev/null
           cargo build
           ./target/debug/dali >> /dev/null &
-          PID=$!
-          cargo test
-          RCODE=$?
-          kill $PID
-          wait $PID
-          exit $RCODE
+          sleep 5 && curl http://localhost:8080 || true
+          HTTP_HOST=backend cargo test
+          exit $?
