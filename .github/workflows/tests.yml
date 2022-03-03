@@ -20,7 +20,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: libvip
         run: |
-          apt-get update && apt install -y \
+          sudo apt-get update
+          sudo apt install -y \
             libvips-dev \
             libvips \
             make
