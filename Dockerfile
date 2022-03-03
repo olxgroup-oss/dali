@@ -1,18 +1,23 @@
 # (c) Copyright 2019-2020 OLX
-ARG BUILD_IMAGE=docker.pkg.github.com/olxgroup-oss/dali/base-rust-image
-ARG BASE_IMAGE=docker.pkg.github.com/olxgroup-oss/dali/base-dali
-
-FROM ${BUILD_IMAGE}:latest as build
+FROM rust:1.59.0-slim as build
 
 WORKDIR /usr/src/dali
 
+RUN apt-get update && apt install -y \
+        libvips-dev \
+        libvips \
+        make
+
 COPY . .
 
-# this flag ensures that proc macro can be compiled in musl targets
-RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo install --path .
+RUN cargo build --release
 
-FROM ${BASE_IMAGE}:latest
+FROM debian:stable-20220228-slim
 
-COPY --from=build /usr/local/cargo/bin/dali /usr/local/bin/dali
+COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
 
-CMD dali
+RUN apt-get update && apt install -y \
+        libvips && \
+    rm -rf /var/lib/apt/lists/*
+
+CMD ["dali"]

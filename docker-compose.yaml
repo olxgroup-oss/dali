@@ -1,5 +1,5 @@
 # (c) Copyright 2019-2020 OLX
-version: '3'
+version: '3.9'
 services:
   http:
     image: nginx
@@ -8,7 +8,9 @@ services:
     ports:
       - 9000:80
   dali:
-    image: ${RUNTIME_IMAGE:-docker.pkg.github.com/olxgroup-oss/dali/dali}:${VERSION_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile.test
     volumes:
       - ./config:/config
     ports: 

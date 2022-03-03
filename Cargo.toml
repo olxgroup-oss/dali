@@ -6,16 +6,17 @@ authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2018"
 links = "vips"
 build = "build.rs"
-
-[build-dependencies]
-pkg-config = "0.3.24"
-
-[dev-dependencies]
+license-file = "LICENSE"
+readme = "README.md"
+homepage = "https://github.com/olxgroup-oss/dali"
 
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]
 awc = []
+
+[build-dependencies]
+pkg-config = "0.3.24"
 
 [dependencies]
 futures = "0.3.21"

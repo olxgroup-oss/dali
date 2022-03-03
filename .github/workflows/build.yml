@@ -3,27 +3,17 @@
 name: build
 
 on:
-  push:
+  pull_request:
     branches:
-      - master
-    paths:
-      - Cargo.toml
+    - master
+
 jobs:
   build_docker_image:
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Docker login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
       - name: Build and Publish to GPR
-        run: make build-image
-  
-  test:
-    needs: [build_docker_image]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Docker login
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
-      - name: Test
-        run: make test
+        run: make docker-publish
