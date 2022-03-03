@@ -32,3 +32,15 @@ jobs:
           sleep 5 && curl http://localhost:8080 || true
           HTTP_HOST=backend cargo test
           exit $?
+  build_docker_pr:
+    runs-on: ubuntu-latest
+    needs: ["test"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v1
+      - name: Docker login
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - name: Build and Publish to GPR
+        run: |
+          sed -i 's/target//g' .dockerignore 
+          REVISION=${GITHUB_REF_NAME%\/merge} make docker-publish

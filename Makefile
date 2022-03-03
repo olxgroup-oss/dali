@@ -4,11 +4,10 @@ DOCKER_ORG ?= olxgroup-oss
 RUNTIME_IMAGE ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/dali/dali
 BUILD_NUMBER ?= $(shell ./scripts/get-current-version.sh)
 
-REVISION ?= $(shell git rev-parse --short HEAD)
-ifeq ($(BUILD_NUMBER),)
-	VERSION_TAG ?= $(REVISION)
+ifeq ($(REVISION),)
+	VERSION_TAG ?= $(BUILD_NUMBER)
 else
-	VERSION_TAG ?= $(BUILD_NUMBER)-$(REVISION)
+	VERSION_TAG ?= $(REVISION)-preview
 endif
 
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
