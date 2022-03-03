@@ -22,6 +22,7 @@ jobs:
         uses: docker://docker
         with:
           args: docker restart backend
+      - uses: Swatinem/rust-cache@v1
       - name: Test
         run: |
           apt-get update && apt install -y libvips-dev libvips make curl
