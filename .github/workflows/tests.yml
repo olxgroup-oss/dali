@@ -11,6 +11,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      nginx:
+        image: nginx:latest
+        ports:
+          - 9000:80
+        options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -26,4 +32,12 @@ jobs:
             libvips \
             make
       - name: Test
-        run: make test
+        run: |
+          cargo build
+          ./target/debug/dali >> /dev/null &
+          PID=$!
+          cargo test
+          RCODE=$?
+          kill $PID
+          wait $PID
+          exit $RCODE
