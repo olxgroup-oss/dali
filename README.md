@@ -71,7 +71,7 @@ To run the tests, the script will start the containers through `docker`, copy so
 
 This is an experimental feature from rust, so in order to use, the nightly rust toolchain has to be enabled. To do that run:
 
-```
+```shell
 rustup toolchain install nightly
 rustup default nightly
 ```
