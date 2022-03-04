@@ -53,13 +53,6 @@ To build and run the application, run the following command:
 
 ``` cargo run ```
 
-_Note: if you're building the application on a `linux musl` system, you'll need to set this env variable: `RUSTFLAGS='-C target-feature=-crt-static'`_
-_if it fails to compile because of the linker, try to add the result of `pkg-config --libs vips` to `RUSTFLAGS=` env variable`_
-
-Alternatively, it is possible to run both components inside docker (once you build them):
-
-```make up```
-
 ## Testing
 
 There are 3 kinds of tests: unit, integration and benchmark tests.
