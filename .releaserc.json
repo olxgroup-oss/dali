@@ -1,0 +1,52 @@
+{
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": false
+        }
+      ],
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "cargo bump ${nextRelease.version} && docker build -t dali ."
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md",
+            "Cargo.toml",
+            "Cargo.lock"
+          ],
+          "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
+        }
+      ],
+      [
+        "@eclass/semantic-release-docker",
+        {
+          "baseImageName": "dali",
+          "registries": [
+            {
+              "url": "ghcr.io",
+              "imageName": "ghcr.io/olxgroup-oss/dali/dali",
+              "user": "GITHUB_USER",
+              "password": "GITHUB_TOKEN"
+            }
+          ]
+        }
+      ]
+    ]
+  }
