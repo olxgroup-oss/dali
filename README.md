@@ -65,7 +65,7 @@ To run them, simply execute: `cargo test --bin dali`. The parameter `--bin` is n
 ### Integration Tests
 
 This tests run over a running application.
-To run the tests, the script will start the containers through `docker-compose`, copy some sample files to the `http` container and run the tests over the application, checking the array of bytes from the responses against expected result images stored in the `tests/resources/results` directory. To run the whole flow, simply run: `make test`.
+To run the tests, the script will start the containers through `docker`, copy some sample files to the `http` container and run the tests over the application, checking the array of bytes from the responses against expected result images stored in the `tests/resources/results` directory. To run the whole flow, simply run: `make test`.
 
 ### Benchmark Tests
 
