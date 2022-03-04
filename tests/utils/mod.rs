@@ -9,6 +9,8 @@ use libvips::VipsApp;
 use libvips::VipsImage;
 use std::env;
 use std::fmt;
+use std::io;
+use std::io::ErrorKind;
 
 lazy_static! {
     static ref VIPS_APP: VipsApp = VipsApp::new("e2e tests", true).expect("Can't initialize Vips");
@@ -127,7 +129,13 @@ pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendReque
         println!("URL: {}", url);
 
         let request = client.get(url).header("User-Agent", "Actix-web").send();
-        let mut response = request.await?;
+        let mut response =
+        match request.await {
+            Ok(response) => response,
+            Err(e) => {
+                return Err(SendRequestError::Send(io::Error::new(ErrorKind::Other, e.to_string())));
+            }
+        };
         println!("Response: {:?}", response);
         response
             .body()

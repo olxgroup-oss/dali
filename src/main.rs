@@ -9,7 +9,6 @@ mod image_processor;
 use commons::config::Configuration;
 use commons::*;
 
-use actix_http::KeepAlive;
 use actix_service::Service;
 use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
 
@@ -251,10 +250,7 @@ async fn main() -> std::io::Result<()> {
 
     let client_timeout = config_data.server_client_timeout.unwrap_or(5000);
     let client_shutdown_timeout = config_data.client_shutdown_timeout.unwrap_or(5000);
-    let server_keep_alive = config_data
-        .server_keep_alive
-        .map(KeepAlive::from)
-        .unwrap_or(KeepAlive::Os);
+    let server_keep_alive = config_data.server_keep_alive;
 
     let server_metrics = HttpServer::new(move || {
         App::new()
