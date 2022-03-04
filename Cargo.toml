@@ -3,7 +3,7 @@
 name = "dali"
 version = "1.0.10"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
-edition = "2018"
+edition = "2021"
 links = "vips"
 build = "build.rs"
 license-file = "LICENSE"
