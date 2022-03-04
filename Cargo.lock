@@ -1966,9 +1966,9 @@ dependencies = [
 
 [[package]]
 name = "rexif"
-version = "0.5.3"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c982e5c23c2e2d169616f7a171a8d26b53aa52fdb66cc4cf0fba6f4f81acff7f"
+checksum = "49352965b70522af9085d7a8c2a6df7494713c67ac58b9af02bcff7fb4ca1483"
 dependencies = [
  "num",
 ]
