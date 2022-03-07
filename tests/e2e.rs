@@ -1,52 +1,10 @@
 // (c) Copyright 2019-2020 OLX
 
-use std::io;
-
-use std::io::ErrorKind;
-use actix_web::web::Bytes;
-use awc::error::SendRequestError;
-use utils::RequestParametersBuilder;
+use utils::make_request;
 
 #[macro_use]
 extern crate lazy_static;
 mod utils;
-
-pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
-    let rt = actix_rt::Runtime::new()?;
-
-    let handle = rt.spawn( async move {
-        let client = awc::Client::default();
-
-        let url = utils::get_url(&params);
-        println!("URL: {}", url);
-
-        let request = client.get(url).header("User-Agent", "Actix-web").send();
-        let mut response =
-        match request.await {
-            Ok(response) => response,
-            Err(e) => {
-                return Err(SendRequestError::Send(io::Error::new(ErrorKind::Other, e.to_string())));
-            }
-        };
-        println!("Response: {:?}", response);
-        match response
-            .body()
-            .limit(5_242_880)
-            .await
-            .map_err(|e| panic!("error: {}", e)) {
-                Err(e) => e,
-                Ok(r) => {
-                    Ok(actix_web::web::Bytes::from(r.to_vec()))
-                }
-            }
-    });
-    match rt.block_on(handle) {
-        Ok(x) => x,
-        Err(e) => {
-            panic!("Error occurred in block_on: {}", e.to_string());
-        }
-    }
-}
 
 #[test]
 fn test_get_simple() {

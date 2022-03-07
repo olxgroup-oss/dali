@@ -1,5 +1,9 @@
 // (c) Copyright 2019-2020 OLX
 
+use actix_rt::System;
+use awc::Client;
+use actix_web::web::Bytes;
+use awc::error::SendRequestError;
 use libvips::ops;
 use libvips::VipsApp;
 use libvips::VipsImage;
@@ -115,8 +119,25 @@ pub fn assert_result(img: &[u8], image_address: &str) {
     assert!(min == 0.0);
 }
 
+pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
+    System::new().block_on(async move {
+        let client = Client::default();
 
-pub(crate) fn get_url(params: &RequestParametersBuilder) -> String {
+        let url = get_url(&params);
+        println!("URL: {}", url);
+
+        let request = client.get(url).send();
+        let mut response = request.await?;
+        println!("Response: {:?}", response);
+        response
+            .body()
+            .limit(5_242_880)
+            .await
+            .map_err(|e| panic!("error: {}", e))
+    })
+}
+
+fn get_url(params: &RequestParametersBuilder) -> String {
     let mut query_string = Vec::new();
     let image_address = format!(
         "http://{}/{}",

@@ -19,12 +19,12 @@ awc_client = []
 pkg-config = "0.3.24"
 
 [dev-dependencies]
-awc = "2"
+awc = { version = "3.0.0-beta.21", features = ["openssl"] }
 
 [dependencies]
 futures = "0.3.21"
 actix-web = "4.0.1"
-actix-rt = "2.6.0"
+actix-rt = { version = "2.6", default-features = false }
 actix-service = "2.0.2"
 actix-http = "3.0.1"
 actix-threadpool = "0.3.3"
