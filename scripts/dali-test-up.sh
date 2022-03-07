@@ -16,6 +16,7 @@ stop_process() {
 
 setup() {
     docker run --rm -v $(pwd)/tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-source -d nginx
+    timeout 30 sh -c 'until nc -z $0 $1; do sleep 1; done' localhost 9000
 }
 
 teardown() {
