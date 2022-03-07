@@ -13,30 +13,35 @@ homepage = "https://github.com/olxgroup-oss/dali"
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]
-awc = []
+awc_client = []
 
 [build-dependencies]
 pkg-config = "0.3.24"
 
+[dev-dependencies]
+awc = "2"
+
 [dependencies]
 futures = "0.3.21"
-actix-web = "3.3.3"
-actix-rt = "1.1.1"
-actix-service = "1.0.6"
-actix-http = "1.0.1"
+actix-web = "4.0.1"
+actix-rt = "2.6.0"
+actix-service = "2.0.2"
+actix-http = "3.0.1"
+actix-threadpool = "0.3.3"
 num_cpus = "1.13.1"
 prometheus = {version = "0.13.0", features = ["process"] }
 prometheus-static-metric = "0.5.1"
 log = "0.4.14"
-env_logger = "0.9.0"
+env_logger = {version = "0.9.0", features = ["termcolor", "humantime", "regex"]}
 chrono = "0.4.19"
 serde = "1.0.136"
 serde_derive = "1.0.136"
 serde_json = "1.0.79"
-serde_qs = {version = "0.8.5", features=["actix"]}
+serde_qs = {version = "0.9", features=["actix4"]}
 config = "0.12.0"
-hyper = { version = "0.13.7", optional = true }
-hyper-timeout = { version = "0.3.1", optional = true }
+hyper = { version = "0.14.0", optional = true, features = ["full"] }
+hyper-timeout = { version = "0.4.1", optional = true }
 libvips = "1.4.3"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
+cfg-if = "1.0.0"

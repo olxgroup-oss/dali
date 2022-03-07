@@ -1,19 +1,63 @@
 // (c) Copyright 2019-2020 OLX
 
+use std::io;
+
+use std::io::ErrorKind;
+use actix_web::web::Bytes;
+use awc::error::SendRequestError;
+use utils::RequestParametersBuilder;
+
 #[macro_use]
 extern crate lazy_static;
 mod utils;
 
+pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
+    let rt = actix_rt::Runtime::new()?;
+
+    let handle = rt.spawn( async move {
+        let client = awc::Client::default();
+
+        let url = utils::get_url(&params);
+        println!("URL: {}", url);
+
+        let request = client.get(url).header("User-Agent", "Actix-web").send();
+        let mut response =
+        match request.await {
+            Ok(response) => response,
+            Err(e) => {
+                return Err(SendRequestError::Send(io::Error::new(ErrorKind::Other, e.to_string())));
+            }
+        };
+        println!("Response: {:?}", response);
+        match response
+            .body()
+            .limit(5_242_880)
+            .await
+            .map_err(|e| panic!("error: {}", e)) {
+                Err(e) => e,
+                Ok(r) => {
+                    Ok(actix_web::web::Bytes::from(r.to_vec()))
+                }
+            }
+    });
+    match rt.block_on(handle) {
+        Ok(x) => x,
+        Err(e) => {
+            panic!("Error occurred in block_on: {}", e.to_string());
+        }
+    }
+}
+
 #[test]
 fn test_get_simple() {
-    let result = utils::make_request(utils::RequestParametersBuilder::new("img-test"))
+    let result = make_request(utils::RequestParametersBuilder::new("img-test"))
         .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.jpg");
 }
 
 #[test]
 fn test_get_rotated() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").with_rotation(utils::Rotation::R270),
     )
     .expect("Unable to download file");
@@ -23,14 +67,14 @@ fn test_get_rotated() {
 #[test]
 fn test_get_resized() {
     let result =
-        utils::make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
+        make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
             .expect("Unable to download file");
     utils::assert_result(&result[..], "resized.jpg");
 }
 
 #[test]
 fn test_get_watermarked_left() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -46,7 +90,7 @@ fn test_get_watermarked_left() {
 
 #[test]
 fn test_get_watermarked_right() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -62,7 +106,7 @@ fn test_get_watermarked_right() {
 
 #[test]
 fn test_get_watermarked_center() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -78,7 +122,7 @@ fn test_get_watermarked_center() {
 
 #[test]
 fn test_get_watermarked_rotated() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -96,7 +140,7 @@ fn test_get_watermarked_rotated() {
 
 #[test]
 fn test_get_encoded_webp() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Webp),
     )
     .expect("Unable to download file");
@@ -105,7 +149,7 @@ fn test_get_encoded_webp() {
 
 #[test]
 fn test_get_encoded_heic() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Heic),
     )
     .expect("Unable to download file");
@@ -114,7 +158,7 @@ fn test_get_encoded_heic() {
 
 #[test]
 fn test_get_encoded_webp_bad_quality() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
             .with_quality(10),
@@ -125,7 +169,7 @@ fn test_get_encoded_webp_bad_quality() {
 
 #[test]
 fn test_get_raw_bad_quality() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Jpeg)
             .with_quality(10),
@@ -136,7 +180,7 @@ fn test_get_raw_bad_quality() {
 
 #[test]
 fn test_get_multiple_watermarks() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -169,7 +213,7 @@ fn test_get_multiple_watermarks() {
 
 #[test]
 fn test_get_watermark_no_alpha() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -188,7 +232,7 @@ fn test_get_watermark_no_alpha() {
 
 #[test]
 fn test_get_exif_watermark() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("exif")
             .add_watermark(
                 "watermark",
@@ -207,7 +251,7 @@ fn test_get_exif_watermark() {
 
 #[test]
 fn test_get_all_features() {
-    let result = utils::make_request(
+    let result = make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
             .with_quality(50)

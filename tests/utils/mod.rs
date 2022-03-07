@@ -1,16 +1,10 @@
 // (c) Copyright 2019-2020 OLX
 
-use actix_http::client::SendRequestError;
-use actix_rt::System;
-use actix_web::client::Client;
-use actix_web::web::Bytes;
 use libvips::ops;
 use libvips::VipsApp;
 use libvips::VipsImage;
 use std::env;
 use std::fmt;
-use std::io;
-use std::io::ErrorKind;
 
 lazy_static! {
     static ref VIPS_APP: VipsApp = VipsApp::new("e2e tests", true).expect("Can't initialize Vips");
@@ -121,31 +115,8 @@ pub fn assert_result(img: &[u8], image_address: &str) {
     assert!(min == 0.0);
 }
 
-pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
-    System::new("test").block_on(async move {
-        let client = Client::default();
 
-        let url = get_url(&params);
-        println!("URL: {}", url);
-
-        let request = client.get(url).header("User-Agent", "Actix-web").send();
-        let mut response =
-        match request.await {
-            Ok(response) => response,
-            Err(e) => {
-                return Err(SendRequestError::Send(io::Error::new(ErrorKind::Other, e.to_string())));
-            }
-        };
-        println!("Response: {:?}", response);
-        response
-            .body()
-            .limit(5_242_880)
-            .await
-            .map_err(|e| panic!("error: {}", e))
-    })
-}
-
-fn get_url(params: &RequestParametersBuilder) -> String {
+pub(crate) fn get_url(params: &RequestParametersBuilder) -> String {
     let mut query_string = Vec::new();
     let image_address = format!(
         "http://{}/{}",

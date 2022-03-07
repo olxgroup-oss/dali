@@ -9,7 +9,7 @@ use std::time::Duration;
 #[cfg(feature = "hyper_client")]
 pub mod client {
     use super::*;
-    use hyper::body::to_bytes;
+    use hyper::body::{to_bytes, Buf};
     use hyper::Uri;
     use std::str::FromStr;
 
@@ -62,12 +62,19 @@ pub mod client {
         })?;
         let status = response.status();
         if response.status().is_success() {
-            to_bytes(response.into_body()).await.map_err(move |e| {
-                let error_str = format!("{}", e).replace("\"", "\\\"");
-                error!("Error getting http file: {}", error_str);
-                actix_web::error::InternalError::new(String::from("Error reading stream."), status)
-                    .into()
-            })
+            match to_bytes(response.into_body()).await {
+                Ok(bytes) => {
+                    Ok(Bytes::from(bytes.chunk().to_owned()))
+                },
+                Err(e) => {
+                    let error_str = format!("{}", e).replace("\"", "\\\"");
+                    error!("Error getting http file: {}", error_str);
+                    Err(actix_web::error::InternalError::new(
+                        String::from("Error reading stream."), 
+                        status
+                    ).into())
+                }
+            }
         } else {
             error!("Error getting http file {}: {}", status, url);
             Err(actix_web::error::InternalError::new(
@@ -79,7 +86,7 @@ pub mod client {
     }
 }
 
-#[cfg(feature = "awc")]
+#[cfg(feature = "awc_client")]
 pub mod client {
     use super::*;
     use actix_web::client::{Client, Connector};
