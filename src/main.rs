@@ -26,7 +26,6 @@ use commons::*;
 use actix_service::Service;
 use actix_web::{body, web::{self, Data}, App, HttpRequest, HttpResponse, HttpServer, error::ErrorInternalServerError};
 
-use chrono::Utc;
 use futures::future::join_all;
 use image_processor::*;
 use lazy_static::*;
@@ -221,7 +220,7 @@ async fn main() -> std::io::Result<()> {
             writeln!(
                 f,
                 r#"{{"timestamp": {}, "level": "{}","target": "{}","message": {}}}"#,
-                Utc::now().timestamp_millis(),
+                commons::timestamp_millis(),
                 record.level(),
                 record.target(),
                 as_json,
