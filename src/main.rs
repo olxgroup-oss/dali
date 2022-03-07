@@ -339,7 +339,7 @@ async fn main() -> std::io::Result<()> {
         #[cfg(feature = "awc_client")]
         {
             app = app.data_factory(move || {
-                http::client::init_client(client_timeout)
+                http::client::init_client(client_timeout.as_secs())
             });
         }
 

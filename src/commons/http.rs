@@ -89,17 +89,14 @@ pub mod client {
 #[cfg(feature = "awc_client")]
 pub mod client {
     use super::*;
-    use actix_web::client::{Client, Connector};
     use std::thread;
 
-    pub type HttpClient = actix_web::client::Client;
+    pub type HttpClient = awc::Client;
 
     pub async fn init_client(http_client_timeout: u64) -> Result<HttpClient, Error> {
         info!("Configure http client for {:?}", thread::current().id());
-        let connector = Connector::new().limit(0).finish();
-        let client = Client::build()
+        let client = HttpClient::builder()
             .timeout(Duration::from_millis(http_client_timeout))
-            .connector(connector)
             .finish();
         Ok(client)
     }
@@ -115,7 +112,7 @@ pub mod client {
             error!("Error to send request: {}", error_str);
             actix_web::error::InternalError::new(
                 String::from("Error to send request"),
-                actix_http::http::StatusCode::INTERNAL_SERVER_ERROR,
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
             )
         })?;
         let status = response.status();

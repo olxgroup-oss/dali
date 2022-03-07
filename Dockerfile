@@ -6,7 +6,6 @@ WORKDIR /usr/src/dali
 RUN apt-get update && apt install -y \
         libvips-dev \
         libvips \
-        openssl \
         make
 
 COPY . .
@@ -18,7 +17,7 @@ FROM debian:stable-20220228-slim
 COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
 
 RUN apt-get update && apt install -y \
-        libvips openssl && \
+        libvips && \
     rm -rf /var/lib/apt/lists/*
 
 CMD ["dali"]

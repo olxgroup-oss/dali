@@ -25,7 +25,7 @@ jobs:
       - uses: Swatinem/rust-cache@v1
       - name: Test
         run: |
-          apt-get update && apt install -y openssl libvips-dev libvips make curl
+          apt-get update && apt install -y libvips-dev libvips make curl
           curl http://backend/exif --output /dev/null
           cargo build
           ./target/debug/dali >> /dev/null &
