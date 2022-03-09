@@ -7,5 +7,6 @@
   "server_keep_alive": 1000,
   "http_client_con_timeout": 1000,
   "http_client_read_timeout": 1000,
-  "http_client_write_timeout": 1000
+  "http_client_write_timeout": 1000,
+  "http_client_max_size_of_payload": 2097152
 }
