@@ -14,7 +14,7 @@ wait_until_ready() {
 }
 
 wait_until_notready() {
-    timeout 30 sh -c 'until ! nc -z $0 $1; do sleep 1; done' $2 $3
+    timeout 30 sh -c 'until ! nc -z $0 $1; do sleep 1; done' $1 $2
 }
 
 stop_process() {
