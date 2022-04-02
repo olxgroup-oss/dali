@@ -10,6 +10,7 @@ The application supports:
 * Resizing an image
 * Rotating an image
 * Apply a watermark image to an image
+* Round corners an image
 
 ## Configuration
 
@@ -131,6 +132,22 @@ Watermarks is an array parameter and therefore, must be indexed when informed (0
 | `watermarks[0][position][x][pos]` | position of the watermark in the X axis. Value in pixels. |
 | `watermarks[0][position][y][pos]` | position of the watermark in the Y axis. Value in pixels. |
 | `watermarks[0][size]` | optional size of the watermark. It should be a value between 1 and 100 representing a percentage from the original image. |
+
+#### Round corners query parameters
+
+Round corners of image is to composite it with the svg [rect](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/rect).
+
+| Parameter | Description |
+|-----------------|-------------|
+| `round=Default` | Round corners by ellipse/circle inscribed in an image bounds |
+| `round[Custom][x]` | x coordinate of the rect |
+| `round[Custom][y]` | y coordinate of the rect |
+| `round[Custom][width]` | width of the rect |
+| `round[Custom][heigth]` | heigth of the rect |
+| `round[Custom][rx]` | The horizontal corner radius of the rect |
+| `round[Custom][ry]` | The vertical corner radius of the rect |
+
+
 
 ## License
 

@@ -29,6 +29,35 @@ fn test_get_resized() {
 }
 
 #[test]
+fn test_get_rounded_default() {
+    let result = utils::make_request(
+        utils::RequestParametersBuilder::new("img-test")
+            .with_format(utils::ImageFormat::Png)
+            .with_round(utils::RoundRect::default()),
+    )
+    .expect("Unable to download file");
+    utils::assert_result_bytes(&result[..], "rounded_default.png");
+}
+
+#[test]
+fn test_get_rounded_custom() {
+    let result = utils::make_request(
+        utils::RequestParametersBuilder::new("img-test")
+            .with_format(utils::ImageFormat::Png)
+            .with_round(utils::RoundRect::Custom {
+                x: None,
+                y: None,
+                width: None,
+                height: None,
+                rx: Some(50),
+                ry: Some(50),
+            }),
+    )
+    .expect("Unable to download file");
+    utils::assert_result_bytes(&result[..], "rounded_50.png");
+}
+
+#[test]
 fn test_get_watermarked_left() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
