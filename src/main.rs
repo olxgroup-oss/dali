@@ -274,7 +274,7 @@ async fn main() -> std::io::Result<()> {
         config_data.client_shutdown_timeout.unwrap_or(5000), 0
     );
     let server_keep_alive = std::time::Duration::new(
-        config_data.server_keep_alive.unwrap() as u64, 0
+        config_data.server_keep_alive.unwrap_or(7200) as u64, 0
     );
 
     let _server_metrics = HttpServer::new(move || {
