@@ -26,7 +26,7 @@ use commons::*;
 use actix_service::Service;
 use actix_web::{body, web::{self, Data}, App, HttpRequest, HttpResponse, HttpServer, error::ErrorInternalServerError};
 
-use futures::future::join_all;
+use futures::future::{join_all, self};
 use image_processor::*;
 use lazy_static::*;
 use libvips::VipsApp;
@@ -287,7 +287,7 @@ async fn main() -> std::io::Result<()> {
     .client_request_timeout( client_timeout)
     .client_disconnect_timeout(client_shutdown_timeout)
     .keep_alive(server_keep_alive)
-    .run(); 
+    .run();
 
     let client_timeout = std::time::Duration::new(
         config_data.http_client_con_timeout.unwrap_or(5000), 0
@@ -351,5 +351,6 @@ async fn main() -> std::io::Result<()> {
     .client_disconnect_timeout(client_shutdown_timeout)
     .run();
 
-    server_main.await
+    future::try_join(server_main, _server_metrics).await?;
+    Ok(())
 }
