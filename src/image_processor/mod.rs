@@ -141,6 +141,7 @@ pub fn process_image(
             let options = ops::PngsaveBufferOptions {
                 q: quality,
                 strip: true,
+                bitdepth: i32::from(8),
                 ..ops::PngsaveBufferOptions::default()
             };
             ops::pngsave_buffer_with_opts(&final_image, &options)
