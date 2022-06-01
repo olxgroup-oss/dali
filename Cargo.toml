@@ -24,24 +24,24 @@ awc = { version = "3.0.0-beta.21", features = [] }
 [dependencies]
 futures = "0.3.21"
 actix-web = "4.0.1"
-actix-rt = { version = "2.6", default-features = false }
+actix-rt = { version = "2.7", default-features = false }
 actix-service = "2.0.2"
-actix-http = "3.0.1"
+actix-http = "3.0.4"
 actix-threadpool = "0.3.3"
 num_cpus = "1.13.1"
-prometheus = {version = "0.13.0", features = ["process"] }
+prometheus = {version = "0.13.1", features = ["process"] }
 prometheus-static-metric = "0.5.1"
-log = "0.4.14"
+log = "0.4.17"
 env_logger = {version = "0.9.0", features = ["termcolor", "humantime", "regex"]}
-serde = "1.0.136"
-serde_derive = "1.0.136"
-serde_json = "1.0.79"
+serde = "1.0.137"
+serde_derive = "1.0.137"
+serde_json = "1.0.81"
 serde_qs = {version = "0.9", features=["actix4"]}
-config = "0.12.0"
-hyper = { version = "0.14.0", optional = true, features = ["full"] }
+config = "0.13.1"
+hyper = { version = "0.14.19", optional = true, features = ["full"] }
 hyper-timeout = { version = "0.4.1", optional = true }
 libvips = "1.4.3"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
 cfg-if = "1.0.0"
-awc = { version = "3.0.0-beta.21", features = [], optional = true }
+awc = { version = "3.0.0", features = [], optional = true }
