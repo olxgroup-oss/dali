@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2020 OLX
 [package]
 name = "dali"
-version = "1.0.10"
+version = "1.0.11"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2018"
 
@@ -30,5 +30,5 @@ config = "0.10.1"
 hyper = { version = "0.13.7", optional = true }
 hyper-timeout = { version = "0.3.1", optional = true }
 libvips = "1.4.0"
-rexif = "0.5.0"
+rexif = "0.7.3"
 lazy_static = "1.4.0"
