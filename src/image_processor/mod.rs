@@ -19,6 +19,7 @@ pub fn process_image(
         quality,
         watermarks,
         rotation,
+        round,
     } = parameters;
     let needs_rotation = rotation.is_some()
         || match rexif::parse_buffer_quiet(&buffer[..]).0 {
@@ -36,7 +37,45 @@ pub fn process_image(
         ""
     };
     *input_size = buffer.len() as u32;
-    let source = VipsImage::new_from_buffer(&buffer[..], options)?;
+    let mut source = VipsImage::new_from_buffer(&buffer[..], options)?;
+
+    if let Some(ref round_rect) = round {
+        let (source_width, source_heigth) = (source.get_width(), source.get_height());
+
+        let (x, y, width, height, rx, ry) = match round_rect {
+            RoundRect::Default => (
+                0,
+                0,
+                source_width,
+                source_heigth,
+                source_width / 2,
+                source_heigth / 2,
+            ),
+            RoundRect::Custom {
+                x,
+                y,
+                width,
+                height,
+                rx,
+                ry,
+            } => (
+                x.unwrap_or(0),
+                y.unwrap_or(0),
+                width.unwrap_or(source_width),
+                height.unwrap_or(source_heigth),
+                rx.unwrap_or(source_width / 2),
+                ry.unwrap_or(source_heigth / 2),
+            ),
+        };
+
+        // TODO check out of bounds
+        let svg = format!(
+            "<svg><rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" rx=\"{}\" ry=\"{}\"/></svg>",
+            x, y, width, height, rx, ry,
+        );
+        let corner_image = VipsImage::new_from_buffer(svg.as_bytes(), "")?;
+        source = ops::composite_2(&source, &corner_image, ops::BlendMode::DestIn)?;
+    }
 
     let mut final_image = if needs_rotation {
         let exif_rotated = ops::autorot(&source)?;
@@ -58,8 +97,7 @@ pub fn process_image(
         *input_size += wm_buffer.len() as u32;
         let watermark = &watermarks[i];
         debug!("Applying watermark: {:?}", watermark);
-        let wm =
-            VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
+        let wm = VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
 
         let wm_width = wm.get_width();
         let wm_height = wm.get_height();
@@ -141,6 +179,8 @@ pub fn process_image(
             let options = ops::PngsaveBufferOptions {
                 q: quality,
                 strip: true,
+                // needs alpha channel for Png images on round corners
+                bitdepth: if round.is_some() { 8 } else { 0 },
                 ..ops::PngsaveBufferOptions::default()
             };
             ops::pngsave_buffer_with_opts(&final_image, &options)

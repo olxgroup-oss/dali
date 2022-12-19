@@ -9,6 +9,9 @@ use libvips::VipsApp;
 use libvips::VipsImage;
 use std::env;
 use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
+use std::io::Read;
 
 lazy_static! {
     static ref VIPS_APP: VipsApp = VipsApp::new("e2e tests", true).expect("Can't initialize Vips");
@@ -22,6 +25,7 @@ pub struct RequestParametersBuilder {
     h: Option<i32>,
     watermarks: Vec<Watermark>,
     r: Option<Rotation>,
+    round: Option<RoundRect>,
 }
 
 pub struct Watermark {
@@ -48,6 +52,19 @@ pub enum ImageFormat {
     Jpeg,
     Webp,
     Heic,
+    Png,
+}
+
+pub enum RoundRect {
+    Default,
+    Custom {
+        x: Option<i32>,
+        y: Option<i32>,
+        width: Option<i32>,
+        height: Option<i32>,
+        rx: Option<i32>,
+        ry: Option<i32>,
+    },
 }
 
 impl RequestParametersBuilder {
@@ -60,6 +77,7 @@ impl RequestParametersBuilder {
             h: None,
             watermarks: Vec::new(),
             r: None,
+            round: None,
         }
     }
 
@@ -81,6 +99,11 @@ impl RequestParametersBuilder {
     pub fn with_size(mut self, width: i32, height: i32) -> Self {
         self.w = Some(width);
         self.h = Some(height);
+        self
+    }
+
+    pub fn with_round(mut self, round: RoundRect) -> Self {
+        self.round = Some(round);
         self
     }
 
@@ -107,8 +130,7 @@ impl RequestParametersBuilder {
 
 pub fn assert_result(img: &[u8], image_address: &str) {
     let file_expected = format!("tests/results/{}", image_address);
-    let img_result =
-        VipsImage::new_from_buffer(img, "").expect("Unable to read image from dali");
+    let img_result = VipsImage::new_from_buffer(img, "").expect("Unable to read image from dali");
     let img_expected =
         VipsImage::new_from_file(&file_expected).expect("Cannot load file from disk");
     let result = ops::relational(&img_result, &img_expected, ops::OperationRelational::Equal)
@@ -117,6 +139,15 @@ pub fn assert_result(img: &[u8], image_address: &str) {
 
     println!("Image diff: {}", min);
     assert!(min == 0.0);
+}
+
+pub fn assert_result_bytes(img: &[u8], image_address: &str) {
+    let file_expected = format!("tests/results/{}", image_address);
+    let f = File::open(file_expected).expect("file not found");
+    let mut reader = BufReader::new(f);
+    let mut buffer = Vec::new();
+    reader.read_to_end(&mut buffer).expect("on read file");
+    assert_eq!(buffer, img)
 }
 
 pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
@@ -159,6 +190,9 @@ fn get_url(params: &RequestParametersBuilder) -> String {
     }
     if let Some(rotation) = &params.r {
         query_string.push(format!("rotation={}", rotation));
+    }
+    if let Some(round) = &params.round {
+        query_string.push(format!("{}", round));
     }
     for (i, item) in params.watermarks.iter().enumerate() {
         let image_address = format!(
@@ -229,6 +263,7 @@ impl fmt::Display for ImageFormat {
             ImageFormat::Jpeg => "Jpeg",
             ImageFormat::Webp => "Webp",
             ImageFormat::Heic => "Heic",
+            ImageFormat::Png => "Png",
         };
         write!(f, "{}", as_str)
     }
@@ -240,6 +275,53 @@ impl fmt::Display for Rotation {
             Rotation::R90 => "R90",
             Rotation::R180 => "R180",
             Rotation::R270 => "R270",
+        };
+        write!(f, "{}", as_str)
+    }
+}
+
+impl Default for RoundRect {
+    fn default() -> Self {
+        RoundRect::Default
+    }
+}
+impl fmt::Display for RoundRect {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let as_str = match self {
+            RoundRect::Default => "round=Default".to_owned(),
+            RoundRect::Custom {
+                x,
+                y,
+                width,
+                height,
+                rx,
+                ry,
+            } => {
+                let mut params: Vec<String> = Vec::new();
+                if let Some(x) = x {
+                    params.push(format!("round[Custom][x]={}", x));
+                }
+                if let Some(y) = y {
+                    params.push(format!("round[Custom][y]={}", y));
+                }
+                if let Some(w) = width {
+                    params.push(format!("round[Custom][width]={}", w));
+                }
+                if let Some(h) = height {
+                    params.push(format!("round[Custom][height]={}", h));
+                }
+                if let Some(rx) = rx {
+                    params.push(format!("round[Custom][rx]={}", rx));
+                }
+                if let Some(ry) = ry {
+                    params.push(format!("round[Custom][ry]={}", ry));
+                }
+                if params.is_empty() {
+                    "round=Default".to_owned()
+                } else {
+                    params.join("&")
+                }
+            }
         };
         write!(f, "{}", as_str)
     }

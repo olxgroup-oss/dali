@@ -24,6 +24,8 @@ pub struct ProcessImageRequest {
     pub watermarks: Vec<Watermark>,
     #[serde(default)]
     pub rotation: Option<Rotation>,
+    #[serde(default)]
+    pub round: Option<RoundRect>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -41,6 +43,19 @@ pub struct Watermark {
 pub struct Size {
     pub width: Option<i32>,
     pub height: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub enum RoundRect {
+    Default,
+    Custom {
+        x: Option<i32>,
+        y: Option<i32>,
+        width: Option<i32>,
+        height: Option<i32>,
+        rx: Option<i32>,
+        ry: Option<i32>,
+    },
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -172,6 +187,12 @@ impl Default for ImageFormat {
 impl Default for WatermarkPosition {
     fn default() -> Self {
         WatermarkPosition::Point
+    }
+}
+
+impl Default for RoundRect {
+    fn default() -> Self {
+        RoundRect::Default
     }
 }
 
