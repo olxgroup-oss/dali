@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2020 OLX
+// (c) Copyright 2019-2023 OLX
 
 pub mod actix_utils;
 pub mod config;

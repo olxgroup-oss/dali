@@ -1,12 +1,13 @@
-# (c) Copyright 2019-2020 OLX
+# (c) Copyright 2019-2023 OLX
 
-FROM rust:1.59-alpine3.15
+FROM rust:1.66.0-alpine3.17
 
-ENV VIPS_VERSION=8.10.6
+ENV VIPS_VERSION=8.13.3
 
-RUN apk add --update --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main \
+RUN apk add --update --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
             build-base \
             clang \
+            clang-libclang \
             expat-dev \
             giflib-dev \
             glib-dev \

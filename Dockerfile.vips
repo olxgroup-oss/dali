@@ -1,12 +1,13 @@
-# (c) Copyright 2019-2020 OLX
+# (c) Copyright 2019-2023 OLX
 
-FROM alpine:3.15
+FROM alpine:3.17
 
-ENV VIPS_VERSION=8.10.6
+ENV VIPS_VERSION=8.13.3
 
-RUN apk add --update --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main --virtual .build-deps \
+RUN apk add --update --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/v3.17/main --virtual .build-deps \
             build-base \
             clang \
+            clang-libclang \
             expat-dev \
             giflib-dev \
             glib-dev \
@@ -34,9 +35,9 @@ RUN wget https://github.com/libvips/libvips/releases/download/v${VIPS_VERSION}/v
     apk del .build-deps
 
 RUN apk add --update --no-cache libgsf glib expat tiff libjpeg-turbo libexif giflib librsvg lcms2 libpng orc libwebp && \
-    apk add --update --no-cache libimagequant --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main && \
-    apk add --update --no-cache libimagequant --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community libheif=1.12.0-r2 && \
-    apk add --update --no-cache libimagequant --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main libde265=1.0.8-r1 && \
+    apk add --update --no-cache libimagequant --repository=https://dl-cdn.alpinelinux.org/alpine/v3.17/main && \
+    apk add --update --no-cache libimagequant --repository=https://dl-cdn.alpinelinux.org/alpine/v3.17/community libheif=1.13.0-r0 && \
+    apk add --update --no-cache libimagequant --repository=https://dl-cdn.alpinelinux.org/alpine/v3.17/main libde265=1.0.9-r0 && \
     export GI_TYPELIB_PATH=/usr/local/lib/girepository-1.0
 
 CMD /usr/local/bin/vips

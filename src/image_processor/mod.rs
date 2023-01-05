@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2020 OLX
+// (c) Copyright 2019-2023 OLX
 
 use crate::commons::*;
 use libvips::ops;
@@ -132,7 +132,7 @@ pub fn process_image(
             let options = ops::WebpsaveBufferOptions {
                 q: quality,
                 strip: true,
-                reduction_effort: 2,
+                effort: 2,
                 ..ops::WebpsaveBufferOptions::default()
             };
             ops::webpsave_buffer_with_opts(&final_image, &options)
@@ -141,6 +141,7 @@ pub fn process_image(
             let options = ops::PngsaveBufferOptions {
                 q: quality,
                 strip: true,
+                bitdepth: 8,
                 ..ops::PngsaveBufferOptions::default()
             };
             ops::pngsave_buffer_with_opts(&final_image, &options)

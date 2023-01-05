@@ -1,5 +1,5 @@
-# (c) Copyright 2019-2020 OLX
-DOCKER_REGISTRY ?= docker.pkg.github.com
+# (c) Copyright 2019-2023 OLX
+DOCKER_REGISTRY ?= ghcr.io
 DOCKER_ORG ?= olxgroup-oss
 BUILD_IMAGE ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/dali/base-rust-image
 BASE_IMAGE ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/dali/base-dali
