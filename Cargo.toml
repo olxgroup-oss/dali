@@ -1,7 +1,7 @@
-# (c) Copyright 2019-2020 OLX
+# (c) Copyright 2019-2023 OLX
 [package]
 name = "dali"
-version = "1.0.11"
+version = "1.2.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2018"
 
@@ -29,6 +29,6 @@ serde_qs = {version = "0.7.0", features=["actix"]}
 config = "0.10.1"
 hyper = { version = "0.13.7", optional = true }
 hyper-timeout = { version = "0.3.1", optional = true }
-libvips = "1.4.0"
+libvips = "1.5.0"
 rexif = "0.7.3"
 lazy_static = "1.4.0"

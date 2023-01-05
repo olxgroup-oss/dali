@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2020 OLX
+// (c) Copyright 2019-2023 OLX
 #[macro_use]
 #[cfg(all(feature = "hyper_client", feature = "awc"))]
 compile_error!("features `crate/hyper_client` and `crate/awc` are mutually exclusive");

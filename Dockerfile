@@ -1,6 +1,6 @@
-# (c) Copyright 2019-2020 OLX
-ARG BUILD_IMAGE=docker.pkg.github.com/olxgroup-oss/dali/base-rust-image
-ARG BASE_IMAGE=docker.pkg.github.com/olxgroup-oss/dali/base-dali
+# (c) Copyright 2019-2023 OLX
+ARG BUILD_IMAGE=ghcr.io/olxgroup-oss/dali/base-rust-image
+ARG BASE_IMAGE=ghcr.io/olxgroup-oss/dali/base-dali
 
 FROM ${BUILD_IMAGE}:latest as build
 
