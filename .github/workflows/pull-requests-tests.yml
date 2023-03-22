@@ -1,0 +1,44 @@
+name: pull-request-tests
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: rust:1.66.1-alpine3.17
+    services:
+      backend:
+        image: nginx:latest
+        options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
+    steps:
+      - uses: actions/checkout@v2
+      - name: Restart nginx
+        uses: docker://docker
+        with:
+          args: docker restart backend
+      - uses: Swatinem/rust-cache@v1
+      - name: Install libvips
+        run:  apk add --update --no-cache
+              --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
+              --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
+              curl
+              musl-dev=1.2.3-r4
+              vips-dev=8.13.3-r1
+              vips-heif=8.13.3-r1
+      - name: Check if nginx is available for files hosting
+        run:  curl http://backend/exif --output /dev/null
+      - name: Build Dali
+        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
+      - name: Run Dali
+        run:  ./target/debug/dali >> /dev/null &
+      - name: Check if Dali is running
+        run:  sleep 5 &&  nc -z localhost 8080
+      - name: Run tests
+        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
+      - name: Exit with the test result
+        run:  exit $?

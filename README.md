@@ -134,4 +134,4 @@ Watermarks is an array parameter and therefore, must be indexed when informed (0
 
 ## License
 
-(c) Copyright 2019-2020 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
+(c) Copyright 2019-2023 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
