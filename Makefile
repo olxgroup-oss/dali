@@ -12,16 +12,16 @@ endif
 
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 
-.PHONY: up test build-base-image build-image
+.PHONY: test run docker-build docker-publish
 
 test:
-	./scripts/dali-tests-runner.sh
+	@ ./scripts/dali-tests-runner.sh
 
 run:
-	cargo run
+	@ cargo run
 
 docker-build:
-	docker build -t ${DALI_IMAGE_NAME}:${VERSION_TAG} .
+	@ docker build -t ${DALI_IMAGE_NAME}:${VERSION_TAG} .
 
 docker-publish: docker-build
-	docker push ${DALI_IMAGE_NAME}:${VERSION_TAG}
+	@ docker push ${DALI_IMAGE_NAME}:${VERSION_TAG}

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-awk -F ' = ' '$1 ~ /version/ { gsub(/[\"]/, "", $2); printf("%s",$2) }' Cargo.toml
+awk -F ' = ' '$1 ~ /version/ { printf("%s",$2) }' Cargo.toml
