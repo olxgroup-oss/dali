@@ -19,7 +19,7 @@ RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
     vips=8.13.3-r1 \
     vips-heif=8.13.3-r1 \
-    openssl=3.0.8-r0
+    openssl
 
 COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
 
