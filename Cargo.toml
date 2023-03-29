@@ -15,7 +15,7 @@ futures = "0.3.5"
 actix-web = "2.0.0"
 actix-rt = "1.1.1"
 actix-service = "1.0.6"
-actix-http = "1.0.1"
+actix-http = "2.2.1"
 num_cpus = "1.13.0"
 prometheus = {version = "0.10.0", features = ["process", "nightly"] }
 prometheus-static-metric = "0.5.1"
