@@ -1,6 +1,10 @@
 # (c) Copyright 2019-2023 OLX
 
-name: build
+name: release
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 on:
   push:
@@ -9,13 +13,20 @@ on:
     paths:
       - Cargo.toml
 jobs:
-  publish_docker_image:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Docker login
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Adds execution permissions to the script which extracts the current version
-        run: chmod +x scripts/get-current-version.sh
-      - name: Build and Publish to GPR
-        run: make docker-publish
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - run: yarn install
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

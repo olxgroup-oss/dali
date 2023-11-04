@@ -1,26 +1,37 @@
 # (c) Copyright 2019-2023 OLX
-FROM rust:1.66.1-alpine3.17 as build
+
+# Rust versions for the vips packages can be found here...
+# https://pkgs.alpinelinux.org/packages?name=vips&branch=v3.18
+
+ARG ALPINE_DOCKER_VER=3.17.2
+ARG ALPINE_VER=3.17
+ARG VIPS_VER=8.13.3-r2
+ARG RUST_VER=1.66.1
+
+FROM rust:${RUST_VER}-alpine${ALPINE_VER} AS build
 
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache \
-    --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
-    --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-    musl-dev=1.2.3-r4 \
-    vips-dev=8.13.3-r1
+    --repository https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/community \
+    --repository https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/main \
+    musl-dev=1.2.4-r2 \
+    vips-dev=${VIPS_VER}
 
 COPY . .
 
 RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
 
-FROM alpine:3.17.2
+FROM alpine:${ALPINE_DOCKER_VER}
 
 RUN apk add --update --no-cache \
-    --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
-    --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-    vips=8.13.3-r1 \
-    vips-heif=8.13.3-r1 \
+    --repository https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/community \
+    --repository https://dl-cdn.alpinelinux.org/alpine/v${ALPINE_VER}/main \
+    vips=${VIPS_VER} \
+    vips-heif=${VIPS_VER} \
     openssl
 
 COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
+
+USER nobody
 
 CMD ["dali"]

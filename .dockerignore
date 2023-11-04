@@ -1,4 +1,10 @@
-target
-.git
-.github
+target/
+.git/
+.github/
 .gitignore
+yarn.lock
+package.json
+Makefile
+.releaserc.json
+node_modules/
+.yarn-integrity

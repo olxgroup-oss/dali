@@ -5,3 +5,8 @@
 .vscode
 .idea
 .DS_Store
+yarn.lock
+node_modules/
+.yarn-integrity
+yarn-debug.log*
+yarn-error.log*

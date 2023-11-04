@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: rust:1.66.1-alpine3.17
+    container: rust:1.73-alpine3.18
     services:
       backend:
         image: nginx:latest
@@ -27,9 +27,9 @@ jobs:
               --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
               --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
               curl
-              musl-dev=1.2.3-r4
-              vips-dev=8.13.3-r1
-              vips-heif=8.13.3-r1
+              musl-dev=1.2.4-r2
+              vips-dev=8.14.3-r0
+              vips-heif=8.14.3-r0
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
       - name: Build Dali
