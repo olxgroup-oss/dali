@@ -29,6 +29,8 @@ jobs:
               musl-dev=1.2.4-r2
               vips-dev=8.14.3-r0
               vips-heif=8.14.3-r0
+              openssl
+              tar
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
       - uses: Swatinem/rust-cache@v2
