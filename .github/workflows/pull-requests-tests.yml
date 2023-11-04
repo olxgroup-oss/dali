@@ -16,12 +16,12 @@ jobs:
         image: nginx:latest
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Restart nginx
         uses: docker://docker
         with:
           args: docker restart backend
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Install libvips
         run:  apk add --update --no-cache
               --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
