@@ -16,7 +16,7 @@ jobs:
         image: nginx:latest
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Restart nginx
         uses: docker://docker
         with:
