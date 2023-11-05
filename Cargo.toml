@@ -11,7 +11,7 @@ hyper_client = ["hyper", "hyper-timeout"]
 awc_client = ["awc"]
 
 [build-dependencies]
-pkg-config = "0.3.24"
+pkg-config = "0.3.27"
 
 [dev-dependencies]
 awc = { version = "3.2.0", features = [] }
