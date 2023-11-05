@@ -11,6 +11,14 @@ use log::*;
 use serde_derive::*;
 use std::fmt;
 
+
+pub fn timestamp_millis() -> u128 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis()
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct ProcessImageRequest {
     pub image_address: String,

@@ -529,7 +529,6 @@ dependencies = [
  "actix-rt",
  "actix-service",
  "actix-web",
- "chrono",
  "config",
  "env_logger",
  "futures",
