@@ -21,6 +21,8 @@ jobs:
         uses: docker://docker
         with:
           args: docker restart backend
+      - name: Install tar
+        run: apk add --no-cache tar
       - uses: Swatinem/rust-cache@v2
       - name: Install libvips
         run:  apk add --update --no-cache
