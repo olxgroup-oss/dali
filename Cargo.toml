@@ -11,7 +11,7 @@ hyper_client = ["hyper", "hyper-timeout"]
 awc = []
 
 [dependencies]
-futures = "0.3.5"
+futures = "0.3.29"
 actix-web = "2.0.0"
 actix-rt = "1.1.1"
 actix-service = "1.0.6"
@@ -19,11 +19,11 @@ actix-http = "1.0.1"
 num_cpus = "1.13.0"
 prometheus = {version = "0.10.0", features = ["process", "nightly"] }
 prometheus-static-metric = "0.5.1"
-log = "0.4.11"
+log = "0.4.20"
 env_logger = "0.7.1"
-serde = "1.0.115"
-serde_derive = "1.0.115"
-serde_json = "1.0.57"
+serde = "1.0.190"
+serde_derive = "1.0.190"
+serde_json = "1.0.108"
 serde_qs = {version = "0.7.0", features=["actix"]}
 config = "0.10.1"
 hyper = { version = "0.13.7", optional = true }
