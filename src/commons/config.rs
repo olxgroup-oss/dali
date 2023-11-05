@@ -32,15 +32,17 @@ impl fmt::Display for Configuration {
 
 impl Configuration {
     pub fn new() -> Result<Self, ConfigError> {
-        let mut s = Config::new();
-
-        s.merge(File::with_name("config/default").required(false))?;
-
-        let env = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
-        s.merge(File::with_name(&format!("config/{}", env)).required(false))?;
-
-        s.merge(Environment::new())?;
-
-        s.try_into()
+        let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
+        let s = Config::builder()
+            .add_source(
+                File::with_name("config/default").required(false)
+            )
+            .add_source(
+                File::with_name(&format!("config/{}", run_mode))
+                    .required(false),
+            )
+            .add_source(Environment::default())
+            .build()?;
+        s.try_deserialize()
     }
 }
