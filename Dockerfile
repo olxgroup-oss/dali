@@ -3,10 +3,10 @@
 # Rust versions for the vips packages can be found here...
 # https://pkgs.alpinelinux.org/packages?name=vips&branch=v3.18
 
-ARG ALPINE_DOCKER_VER=3.17.2
-ARG ALPINE_VER=3.17
-ARG VIPS_VER=8.13.3-r2
-ARG RUST_VER=1.66.1
+ARG ALPINE_DOCKER_VER=3.18.4
+ARG ALPINE_VER=3.18
+ARG VIPS_VER=8.14.3-r0
+ARG RUST_VER=1.73.0
 
 FROM rust:${RUST_VER}-alpine${ALPINE_VER} AS build
 
