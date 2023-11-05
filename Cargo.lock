@@ -41,7 +41,7 @@ checksum = "c95cc9569221e9802bf4c377f6c18b90ef10227d787611decf79fd47d2a8e76c"
 dependencies = [
  "actix-codec 0.2.0",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "actix-utils 1.0.6",
  "derive_more",
  "either",
@@ -61,7 +61,7 @@ dependencies = [
  "actix-codec 0.2.0",
  "actix-connect",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "actix-threadpool",
  "actix-utils 1.0.6",
  "base64 0.11.0",
@@ -145,7 +145,7 @@ checksum = "45407e6e672ca24784baa667c5d32ef109ccdd8d5e0b5ebb9ef8a67f4dfb708e"
 dependencies = [
  "actix-codec 0.3.0",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "actix-utils 2.0.0",
  "futures-channel",
  "futures-util",
@@ -168,6 +168,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-service"
+version = "2.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b894941f818cfdc7ccc4b9e60fa7e53b5042a2e8567270f9147d5591893373a"
+dependencies = [
+ "futures-core",
+ "paste",
+ "pin-project-lite 0.2.7",
+]
+
+[[package]]
 name = "actix-testing"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -176,7 +187,7 @@ dependencies = [
  "actix-macros",
  "actix-rt",
  "actix-server",
- "actix-service",
+ "actix-service 1.0.6",
  "log",
  "socket2",
 ]
@@ -204,7 +215,7 @@ checksum = "a4e5b4faaf105e9a6d389c606c298dcdb033061b00d532af9df56ff3a54995a8"
 dependencies = [
  "actix-codec 0.2.0",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "actix-utils 1.0.6",
  "derive_more",
  "either",
@@ -220,7 +231,7 @@ checksum = "fcf8f5631bf01adec2267808f00e228b761c60c0584cc9fa0b5364f41d147f4e"
 dependencies = [
  "actix-codec 0.2.0",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "bitflags 1.3.2",
  "bytes 0.5.6",
  "either",
@@ -238,7 +249,7 @@ checksum = "2e9022dec56632d1d7979e59af14f0597a28a830a9c1c7fec8b2327eb9f16b5a"
 dependencies = [
  "actix-codec 0.3.0",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "bitflags 1.3.2",
  "bytes 0.5.6",
  "either",
@@ -262,7 +273,7 @@ dependencies = [
  "actix-router",
  "actix-rt",
  "actix-server",
- "actix-service",
+ "actix-service 1.0.6",
  "actix-testing",
  "actix-threadpool",
  "actix-tls",
@@ -358,7 +369,7 @@ dependencies = [
  "actix-codec 0.2.0",
  "actix-http",
  "actix-rt",
- "actix-service",
+ "actix-service 1.0.6",
  "base64 0.11.0",
  "bytes 0.5.6",
  "derive_more",
@@ -563,7 +574,7 @@ version = "1.5.0"
 dependencies = [
  "actix-http",
  "actix-rt",
- "actix-service",
+ "actix-service 2.0.2",
  "actix-web",
  "config",
  "env_logger",
@@ -1466,6 +1477,12 @@ dependencies = [
  "smallvec",
  "windows-targets 0.48.5",
 ]
+
+[[package]]
+name = "paste"
+version = "1.0.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
 name = "pathdiff"

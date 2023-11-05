@@ -14,7 +14,7 @@ awc = []
 futures = "0.3.29"
 actix-web = "2.0.0"
 actix-rt = "1.1.1"
-actix-service = "1.0.6"
+actix-service = "2.0.2"
 actix-http = "1.0.1"
 num_cpus = "1.16.0"
 prometheus = {version = "0.13.3", features = ["process", "nightly"] }
