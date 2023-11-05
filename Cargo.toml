@@ -13,7 +13,7 @@ awc = []
 [dependencies]
 futures = "0.3.29"
 actix-web = "2.0.0"
-actix-rt = "1.1.1"
+actix-rt = "2.9.0"
 actix-service = "1.0.6"
 actix-http = "1.0.1"
 num_cpus = "1.16.0"
