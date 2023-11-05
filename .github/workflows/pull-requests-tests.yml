@@ -30,6 +30,7 @@ jobs:
           vips-dev=8.13.3-r1
           vips-heif=8.13.3-r1
           tar
+          openssl
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
       - uses: Swatinem/rust-cache@v2
