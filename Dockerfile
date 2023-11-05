@@ -1,5 +1,5 @@
 # (c) Copyright 2019-2023 OLX
-FROM rust:1.66.1-alpine3.17 as build
+FROM rust:1.73.0-alpine3.17 as build
 
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache \
