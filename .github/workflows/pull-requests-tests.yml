@@ -21,19 +21,18 @@ jobs:
         uses: docker://docker
         with:
           args: docker restart backend
-      - name: Install tar
-        run: apk add --no-cache tar
-      - uses: Swatinem/rust-cache@v2
-      - name: Install libvips
+      - name: Install build dependencies
         run:  apk add --update --no-cache
-              --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
-              --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
-              curl
-              musl-dev=1.2.3-r5
-              vips-dev=8.13.3-r1
-              vips-heif=8.13.3-r1
+          --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
+          --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
+          curl
+          musl-dev=1.2.3-r5
+          vips-dev=8.13.3-r1
+          vips-heif=8.13.3-r1
+          tar
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
+      - uses: Swatinem/rust-cache@v2
       - name: Build Dali
         run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
       - name: Run Dali
