@@ -5,7 +5,7 @@ WORKDIR /usr/src/dali
 RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main \
-    musl-dev=1.2.3-r4 \
+    musl-dev=1.2.3-r5 \
     vips-dev=8.13.3-r1
 
 COPY . .
