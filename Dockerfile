@@ -1,5 +1,5 @@
 # (c) Copyright 2019-2023 OLX
-FROM rust:1.66.1-alpine3.17 as build
+FROM rust:1.73.0-alpine3.17 as build
 
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache \
@@ -12,7 +12,7 @@ COPY . .
 
 RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
 
-FROM alpine:3.17.2
+FROM alpine:3.18.4
 
 RUN apk add --update --no-cache \
     --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community \
