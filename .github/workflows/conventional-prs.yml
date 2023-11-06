@@ -1,3 +1,5 @@
+# (c) Copyright 2019-2023 OLX
+
 # Attribution: https://github.com/amannn/action-semantic-pull-request/blob/v5.3.0/.github/workflows/lint-pr-title.yml
 name: PR
 on:
