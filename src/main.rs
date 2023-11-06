@@ -120,8 +120,7 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
     let vips_data = req
         .app_data::<Data<libvips::VipsApp>>()
         .unwrap()
-        .get_ref()
-        .clone();
+        .get_ref();
     let http_client = req
         .app_data::<Data<DaliHttpClient>>()
         .unwrap()
