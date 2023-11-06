@@ -49,6 +49,7 @@ jobs:
               tar
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
+      # Cache needs the Cargo.lock file for the cache key and must come after the git checkout
       - name: Set up cargo cache
         uses: actions/cache@v3
         continue-on-error: false
@@ -93,15 +94,20 @@ jobs:
     needs: [test]
     if: ${{ !contains(needs.test.outputs.status, 'failure') }}
     steps:
+      - uses: actions/checkout@v4
+      # artifact needs to be downloaded after the git repo checkout as checkout removes all files
       - name: Download the build release of dali
         id: artifact
         uses: actions/download-artifact@v3
         with:
           name: dali
+          path: target/release
       - name: 'Echo download path'
         run: |
-          ls -alR ${{steps.artifact.outputs.download-path}}
-      - uses: actions/checkout@v4
+          ls -alR ${{steps.artifact.outputs.download-path}}/dali || true
+          ls -la Dockerfile.preview || true
+          echo $HOME || true
+          echo $PWD || true
       - name: Log in to the Container registry
         if: github.event_name == 'pull_request'
         uses: docker/login-action@v3
