@@ -8,12 +8,17 @@ DALI_IMAGE_TAG ?= $(shell git branch --show-current)
 
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 
-.PHONY: up test run pull
+.PHONY: up down test run pull
 
 up:
 	RUNTIME_IMAGE=$(DALI_IMAGE_NAME) RUNTIME_TAG=$(DALI_IMAGE_TAG) $(SUDO) docker compose -p $(PROJECT_NAME) \
 			-f docker-compose.yaml \
 			up --remove-orphans --exit-code-from dali
+
+down:
+	RUNTIME_IMAGE=$(DALI_IMAGE_NAME) RUNTIME_TAG=$(DALI_IMAGE_TAG) $(SUDO) docker compose -p $(PROJECT_NAME) \
+			-f docker-compose.yaml \
+			down --remove-orphans --volumes
 
 test:
 	@ ./scripts/dali-tests-runner.sh

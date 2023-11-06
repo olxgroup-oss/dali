@@ -1,6 +1,6 @@
 {
-  "app_port": 8080,
-  "health_port": 8081,
+  "app_port": 18080,
+  "health_port": 18081,
   "log_level": "debug",
   "server_client_timeout": 1000,
   "client_shutdown_timeout": 1000,

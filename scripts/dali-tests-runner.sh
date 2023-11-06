@@ -2,7 +2,7 @@
 # requires docker service to be running
 
 run_tests() {
-    RUN_MODE=compose cargo run >> /dev/null &
+    RUN_MODE=default cargo run >> /dev/null &
     PID=$!
     wait_until_ready localhost 8080
     cargo test

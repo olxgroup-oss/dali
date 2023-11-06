@@ -1,6 +1,6 @@
 version: '3'
 services:
-  http:
+  backend:
     image: nginx
     volumes:
       - ./tests/resources/:/usr/share/nginx/html/
@@ -11,6 +11,8 @@ services:
     volumes:
       - ./config:/config
     ports:
-      - 8080:8080
+      - 8080:18080
+      - 8081:18081
     environment:
       - RUN_MODE=compose
+      - HTTP_HOST=backend
