@@ -7,6 +7,10 @@ on:
     branches:
       - master
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: docker.pkg.github.com
   IMAGE_NAME: ${{ github.repository }}/dali
@@ -76,8 +80,7 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value={{branch}}
+          tags: ${{ github.ref_name }}
 
       - name: Build and push
         if: github.event_name == 'pull_request'
