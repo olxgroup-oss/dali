@@ -10,7 +10,7 @@ on:
   push:
     branches:
       - master
-  tags:
+    tags:
       - 'v*'
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - with:
+        with:
           fetch-depth: 0
 
       - name: Semantic Release

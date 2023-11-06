@@ -63,8 +63,6 @@ jobs:
           tags: |
             type=ref,event=branch
             type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
 
       - name: Build and push
         if: github.event_name == 'pull_request'
@@ -76,8 +74,7 @@ jobs:
 
       - name:
         uses: marocchino/sticky-pull-request-comment@v2
-        # When the previous steps fails, the workflow would stop. By adding this
-        # condition you can continue the execution with the populated error message.
+        # Inform the user that a preview image has been built and published
         with:
           header: pr-docker-image
           message: |
