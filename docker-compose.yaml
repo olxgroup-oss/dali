@@ -15,4 +15,4 @@ services:
       - 8081:18081
     environment:
       - RUN_MODE=compose
-      - HTTP_HOST=backend
+      - HTTP_HOST=backend:80

@@ -66,7 +66,7 @@ There are two methods in which tests can be run.
 
 > Please note that the two testing methods are mutualy exclusive as they share the same port numbers.
 
-To link hte dali server to the nginx server, an env variable, `HTTP_HOST` is required to be set. If it is not set, it defaults to `localhost`. See the [.envrc](.envrc) file for more details.
+To link the dali server to the nginx server running in _*docker compose*_, an env variable, `HTTP_HOST` is required to be set. If it is not set, it defaults to `localhost:9000`. See the [.envrc](.envrc) file for more details.
 
 `RUN_MODE` allows different configuration files to be loaded from the [./config](./config) folder.
 
@@ -117,12 +117,15 @@ Run the unit test suite.
 
 ```console
 cargo test --bin dali
+# this unit test uses mocks and nginx is not required
 ```
 
 Or, run the full e2e suite.
 
 ```console
 cargo test
+# or if you do not have direnv set the env var
+HTTP_HOST=backend:80 cargo test
 ```
 
 By default, the current branch is used to pull an image of **dali** from the github package registry. This allows you to create a preview container image that is publically available. This can be used for smoke tests or other benchmark tests, before a release and new version is published.

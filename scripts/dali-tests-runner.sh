@@ -2,10 +2,10 @@
 # requires docker service to be running
 
 run_tests() {
-    RUN_MODE=default cargo run >> /dev/null &
+    HTTP_HOST=localhost:9000 RUN_MODE=default cargo run >> /dev/null &
     PID=$!
     wait_until_ready localhost 8080
-    cargo test
+    HTTP_HOST=localhost:9000 cargo test
     RCODE=$?
     stop_process ${PID} localhost 8080
 }
