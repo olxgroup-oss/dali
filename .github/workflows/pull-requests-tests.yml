@@ -61,8 +61,6 @@ jobs:
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
-      - name: Compile
-        run: RUSTFLAGS="$RUSTFLAGS_EXTRA -C target-feature=-crt-static $(pkg-config vips --libs)" cargo test --no-run --locked --profile dev --quiet
       - name: Build Dali
         run:  |
           RUSTFLAGS="$RUSTFLAGS_EXTRA -C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --profile dev
@@ -101,7 +99,8 @@ jobs:
         with:
           name: dali
       - name: 'Echo download path'
-        run: echo ${{steps.artifact.outputs.download-path}}
+        run: |
+          ls -alR ${{steps.artifact.outputs.download-path}}
       - uses: actions/checkout@v4
       - name: Log in to the Container registry
         if: github.event_name == 'pull_request'
