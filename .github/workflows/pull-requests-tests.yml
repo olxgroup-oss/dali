@@ -105,9 +105,11 @@ jobs:
       - name: 'Echo download path'
         run: |
           ls -alR ${{steps.artifact.outputs.download-path}}/dali || true
-          ls -la Dockerfile.preview || true
+          ls -la $PWD/Dockerfile.preview || true
           echo $HOME || true
           echo $PWD || true
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
         if: github.event_name == 'pull_request'
         uses: docker/login-action@v3
@@ -121,8 +123,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: ${{ github.head_ref }}
 
       - name: Build and push
