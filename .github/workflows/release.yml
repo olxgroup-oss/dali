@@ -1,0 +1,32 @@
+# (c) Copyright 2019-2023 OLX
+
+name: release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.repository_owner }}
+        with:
+          dry_run: true
+          extra_plugins: |
+            @semantic-release/changelog@v6.0.3
+            @semantic-release/git@10.0.1
+            @semantic-release/github@9.2.0
+            @semantic-release/commit-analyzer@11.1.0
+            @semantic-release/release-notes-generator@12.1.0
+            semantic-release-major-tag@0.3.2
