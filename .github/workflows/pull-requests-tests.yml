@@ -19,6 +19,8 @@ jobs:
       backend:
         image: nginx:latest
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
+    outputs:
+      status: ${{ join(steps.*.conclusion) }}
     steps:
       - uses: actions/checkout@v4
       - name: Restart nginx
@@ -48,8 +50,15 @@ jobs:
         run:  RUST_BACKTRACE=1 RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
       - name: Exit with the test result
         run:  exit $?
+
+  # Only runs if a pull request is created
+  # ignored by renovate branch auto-commit strategy, which does not create PRs
+  # renovate creates merge branches and merges on test success
+  # if the tests fail, a PR is raised
+  # Only run if the tests were successful
   docker-preview:
     runs-on: ubuntu-latest
+    if: ${{ !contains(needs.test.outputs.status, 'failure') }}
     steps:
       - uses: actions/checkout@v4
       - name: Log in to the Container registry
@@ -68,18 +77,20 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
+            type=raw,value={{branch}}
 
       - name: Build and push
         if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name:
+      - name: Add package image reference to PR
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         # Inform the user that a preview image has been built and published
         with:
