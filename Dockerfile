@@ -1,7 +1,9 @@
 # (c) Copyright 2019-2023 OLX
 
 # Rust versions for the vips packages can be found here...
-# https://pkgs.alpinelinux.org/packages?name=vips&branch=v3.18
+# https://pkgs.alpinelinux.org/packages?name=vips*&branch=v3.18&repo=&arch=x86_64&maintainer=
+# https://pkgs.alpinelinux.org/packages?name=musl*&branch=v3.18&repo=&arch=x86_64&maintainer=
+
 
 ARG ALPINE_DOCKER_VER=3.18.4
 ARG ALPINE_VER=3.18
