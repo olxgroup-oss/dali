@@ -68,7 +68,7 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=pr
+            type=ref,event=branch
 
       - name: Build and push
         if: github.event_name == 'pull_request'

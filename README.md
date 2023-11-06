@@ -43,9 +43,9 @@ The application will compute the number of threads by the following formula: `po
 * Docker
 * Rust
 
-This application relies on C libvips library. That means it has to be previously installed into the system before compiling and/or running.
+This application relies on C libvips library. That means it has to be installed on your system before compiling and/or running.
 
-For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.10.1)
+For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required version 8.14.4)
 
 Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup update`.
 
@@ -82,7 +82,7 @@ To run the tests, the script will start the containers through `docker-compose`,
 
 This is an experimental feature from rust, so in order to use, the nightly rust toolchain has to be enabled. To do that run:
 
-```
+```console
 rustup toolchain install nightly
 rustup default nightly
 ```
@@ -93,7 +93,9 @@ To run the benchmark, simply call `cargo bench` (application must be running at 
 
 It outputs the average time per iteration and the deviation between max and min. Example output from a 4 core 2.3GHz MacBook (application running inside docker limited to 4 cores and with 4 workers):
 
-```test bench_highhes ... bench:  71,112,344 ns/iter (+/- 7,798,699)```
+```console
+test bench_highhes ... bench:  71,112,344 ns/iter (+/- 7,798,699)
+```
 
 ## API
 

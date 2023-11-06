@@ -1,4 +1,5 @@
 #!/bin/bash
+# requires docker service to be running
 
 run_tests() {
     RUN_MODE=compose cargo run >> /dev/null &
@@ -23,7 +24,7 @@ stop_process() {
 }
 
 setup() {
-    docker run --rm -v $(pwd)/tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.23.3-alpine-slim
+    docker run --rm -v ./tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.23.3-alpine-slim
     wait_until_ready localhost 9000
 }
 
