@@ -5,6 +5,19 @@ version = "1.5.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2021"
 
+[profile.dev]
+# Disabling debug info speeds up builds a bunch,
+# and we don't rely on it for debugging that much.
+debug = 1
+opt-level = 0
+codegen-units = 8
+incremental = false
+
+[profile.release]
+incremental = true
+debug = 0 # Set this to 1 or 2 to get more useful backtraces in debugger.
+opt-level = 3 # Optimize for size
+
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]

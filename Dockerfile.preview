@@ -8,7 +8,7 @@ RUN apk add --update --no-cache \
     vips-heif=8.14.3-r0 \
     openssl
 
-COPY --chown 1:1 --chmod=655 target/release/dali /usr/local/bin/dali
+COPY --chown=root:root --chmod=655 target/release/dali /usr/local/bin/dali
 
 USER nobody
 
