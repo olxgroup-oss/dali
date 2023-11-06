@@ -45,15 +45,26 @@ jobs:
         run:  curl http://backend/exif --output /dev/null
       - uses: Swatinem/rust-cache@v2
       - name: Build Dali
-        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
+        run:  |
+          RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
+          RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
       - name: Run Dali
         run:  ./target/debug/dali >> /dev/null &
       - name: Check if Dali is running
         run:  sleep 5 &&  nc -z localhost 8080
       - name: Run tests
-        run:  RUST_BACKTRACE=1 RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
-      - name: Exit with the test result
-        run:  exit $?
+        run: |
+          set +e
+          RUST_BACKTRACE=1 RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
+          exitcode="$?"
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+          exit "$exitcode"
+      - name: Upload the built dali binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: dali
+          path: target/release/dali
+
 
   # Only runs if a pull request is created
   # ignored by renovate branch auto-commit strategy, which does not create PRs
@@ -65,6 +76,10 @@ jobs:
     needs: [test]
     if: ${{ !contains(needs.test.outputs.status, 'failure') }}
     steps:
+      - name: Download the build release of dali
+        uses: actions/download-artifact@v3
+        with:
+          name: dali
       - uses: actions/checkout@v4
       - name: Log in to the Container registry
         if: github.event_name == 'pull_request'
@@ -74,7 +89,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker meta
+      - name: Docker metadata
         if: github.event_name == 'pull_request'
         id: meta
         uses: docker/metadata-action@v5
@@ -88,7 +103,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.preview
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
