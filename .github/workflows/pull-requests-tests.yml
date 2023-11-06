@@ -18,8 +18,8 @@ env:
   CARGO_NET_RETRY: 10
   CI: 1
   RUST_BACKTRACE: short
-  RUSTFLAGS_EXTRA: "-D warnings -W rust-2021-compatibility"
   RUSTUP_MAX_RETRIES: 10
+  RUSTFLAGS_EXTRA: "-D warnings -W rust-2021-compatibility"
 
 jobs:
   test:
@@ -33,7 +33,7 @@ jobs:
       status: ${{ join(steps.*.conclusion) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Restart nginx
+      - name: Restart nginx to load resource images
         uses: docker://docker
         with:
           args: docker restart backend
@@ -62,7 +62,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - name: Compile
-        run: cargo test --no-run --locked --profile dev
+        run: RUSTFLAGS="$RUSTFLAGS_EXTRA -C target-feature=-crt-static $(pkg-config vips --libs)" cargo test --no-run --locked --profile dev --quiet
       - name: Build Dali
         run:  |
           RUSTFLAGS="$RUSTFLAGS_EXTRA -C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --profile dev
