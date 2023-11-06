@@ -1,4 +1,5 @@
 target/
+!target/release/dali
 .git/
 .github/
 .gitignore

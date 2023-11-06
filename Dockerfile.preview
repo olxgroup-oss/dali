@@ -9,6 +9,7 @@ RUN apk add --update --no-cache \
     openssl
 
 COPY --chown=root:root --chmod=655 ./target/release/dali /usr/local/bin/dali
+#COPY ./target/release/dali /usr/local/bin/dali
 
 USER nobody
 
