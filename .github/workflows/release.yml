@@ -1,0 +1,66 @@
+# (c) Copyright 2019-2023 OLX
+
+name: release
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/dali
+
+on:
+  push:
+    branches:
+      - master
+  tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - with:
+          fetch-depth: 0
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_USER: ${{ github.repository_owner }}
+        with:
+          dry_run: false
+          extra_plugins: |
+            @semantic-release/changelog@v6.0.3
+            @semantic-release/git@10.0.1
+            @semantic-release/github@9.2.0
+            @semantic-release/commit-analyzer@11.1.0
+            @semantic-release/release-notes-generator@12.1.0
+            semantic-release-major-tag@0.3.2
+
+      - name: Log in to the Container registry
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        if: steps.semantic.outputs.new_release_published == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: olxgroup-oss/dali/dali
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Build and push
+        if: steps.semantic.outputs.new_release_published == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
