@@ -83,6 +83,7 @@ jobs:
           name: dali
           path: target/release/dali
           if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
+          retention-days: 1
 
 
   # Only runs if a pull request is created
