@@ -10,7 +10,7 @@ SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 
 .PHONY: up down test run pull
 
-up:
+up: pull
 	RUNTIME_IMAGE=$(DALI_IMAGE_NAME) RUNTIME_TAG=$(DALI_IMAGE_TAG) $(SUDO) docker compose -p $(PROJECT_NAME) \
 			-f docker-compose.yaml \
 			up --remove-orphans --exit-code-from dali
