@@ -1,0 +1,25 @@
+# Delete Docker images after PR merge
+#
+
+name: 'clean up pr'
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  purge:
+    name: Delete build artifacts and preview images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: chipkent/action-cleanup-package@v1.0.1
+        with:
+          package-name: ${{ github.event.repository.name }}/dali
+          tag: ${{ github.head_ref }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: stefanluptak/delete-old-pr-artifacts@v1
+        with:
+          workflow_filename: pull-request-tests.yml
+          debug: true
+
+
