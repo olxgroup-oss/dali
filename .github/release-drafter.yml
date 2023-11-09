@@ -1,25 +1,36 @@
 name-template: 'Upcoming v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 categories:
-  - title: '🚀 Features'
+  - title: ":boom: Breaking Changes"
+    label: "breaking"
+  - title: ":rocket: Features"
+    label: "enhancement"
+  - title: ":fire: Removals and Deprecations"
+    label: "removal"
+  - title: ":beetle: Fixes"
+    label: "bug"
+  - title: ":racehorse: Performance"
+    label: "performance"
+  - title: ":rotating_light: Testing"
+    label: "tests"
+  - title: ":construction_worker: Continuous Integration"
     labels:
-      - 'feat'
-      - 'feature'
-      - 'enhancement'
-  - title: '🐛 Bug Fixes'
+      - "ci"
+      - "github"
+      - "github_actions"
+  - title: ":books: Documentation"
+    label: "documentation"
+  - title: ":hammer: Refactoring"
+    label: "refactoring"
+  - title: ":lipstick: Style"
+    label: "style"
+  - title: ":scroll: Policy"
+    label: "policy"
+  - title: ":package: Dependencies"
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
-      - 'dependencies'
-  - title: '🧰 Maintenance'
-    label: 'chore'
-  - title: '📖 Documentation'
-    labels:
-      - 'docs'
-  - title: '🔧 Renovate'
-    labels:
-      - 'renovate'
+      - "dependencies"
+      - "renovate"
+      - "dependabot"
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 version-resolver:
