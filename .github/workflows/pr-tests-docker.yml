@@ -104,10 +104,6 @@ jobs:
         with:
           name: dali
           path: target/release
-      - name: 'Verify artifact path'
-        run: |
-          ls -alR ${{steps.artifact.outputs.download-path}}/dali || true
-          ls -la $PWD/Dockerfile.preview || true
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
@@ -136,7 +132,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Add package image reference to PR
+      - name: Add package image comment to PR
         if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         # Inform the user that a preview image has been built and published
@@ -145,7 +141,7 @@ jobs:
           message: |
             Hey there and thank you for opening this pull request! 👋🏼
 
-            You can pull a preview docker image of dali with the below command:
+            You can pull a preview container image of dali with the below command:
 
             ```console
             docker pull ${{ steps.meta.outputs.tags }}
