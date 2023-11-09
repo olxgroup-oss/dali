@@ -1,9 +1,5 @@
-target/
+**
+
 !target/release/dali
-.git/
-.github/
-.gitignore
-Makefile
-.releaserc.json
-node_modules/
-.yarn-integrity
+!LICENSE
+!README.md
