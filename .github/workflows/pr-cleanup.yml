@@ -1,7 +1,7 @@
 # Delete Docker images after PR merge
 #
 
-name: 'clean up pr'
+name: 'Clean Up PR'
 
 on:
   pull_request:
@@ -20,7 +20,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: stefanluptak/delete-old-pr-artifacts@v1
         with:
-          workflow_filename: pull-request-tests.yml
+          workflow_filename: pull-requests-tests.yml
           debug: true
   cleanup:
     name: Clean up branch caches
@@ -54,4 +54,3 @@ jobs:
           echo "Done"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
