@@ -69,14 +69,15 @@
         "failComment": false,
         "failTitle": false,
         "releasedLabels": false,
-        "successComment": ":tada: This ${issue.pull_request ? 'pull request' : 'issue'} is included in version ${nextRelease.version}\n\nThe release is available on [crates](https://crates.io/libvips/${nextRelease.version})"
+        "successComment": ":tada: This ${issue.pull_request ? 'pull request' : 'issue'} is included in version ${nextRelease.version}\n\nThe container image is available on [github packages](ghcr.io/olxgroup-oss/dali/dali:${nextRelease.version})"
       }
     ],
     [
       "@semantic-release/git",
       {
         "assets": [
-          "CHANGELOG.md"
+          "CHANGELOG.md",
+          "Cargo.toml"
         ],
         "message": "chore: Release ${nextRelease.version} [skip ci]"
       }
