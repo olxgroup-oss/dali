@@ -4,7 +4,7 @@
 # Takes two parameters; or defaults are set for the benchmark filename to run
 # defaults to the request_benchmarks
 benchmark="${1:?"Please specify which benchmark file you want to test"}"
-feature="${2:-awc_client}"
+feature="${2:-hyper_client}"
 
 # We can run the server with  different features to test different server implementations
 # current the is hyper_client, the default, and awc_client
@@ -25,7 +25,7 @@ EOT
 
 run_benchmark() {
     benchmark="${1}"
-    feature="${2:-awc_client}"
+    feature="${2:-hyper_client}"
 
     echo "Running benchmark $benchmark using the feature:$feature"
     sleep 5
@@ -36,7 +36,7 @@ run_benchmark() {
 
     wait_until_ready localhost 8080
 
-    BENCH_HTTP_HOST="http://127.0.0.1:8080" BENCH_FILE_SERVER_HOST="http://127.0.0.1:9000" cargo bench --features "${feature}" --bench "${benchmark}"
+    BENCH_HTTP_HOST="http://127.0.0.1:8080" BENCH_FILE_SERVER_HOST="http://127.0.0.1:9000" cargo bench --features "${feature}" --bench "${benchmark}" -- --baseline-save "${feature}"
     RCODE=$?
     stop_process ${PID} localhost 8080
 }
@@ -76,4 +76,5 @@ teardown
 if [[ ${RCODE} -ne 0 ]]; then
     exit 1
 fi
-exit 0
+
+open "reports/criterion/${benchmark}/report/index.html"
