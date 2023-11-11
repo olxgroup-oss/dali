@@ -30,6 +30,7 @@ use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer,
 };
 
+use actix_web::dev::Service;
 use futures::future::{self, join_all};
 use image_processor::*;
 use lazy_static::*;
@@ -38,7 +39,6 @@ use log::*;
 use prometheus::*;
 use prometheus_static_metric::*;
 use std::{env, iter::once, time::SystemTime};
-use actix_web::dev::Service;
 
 make_static_metric! {
     pub struct HttpRequestDuration: Histogram {
@@ -117,10 +117,7 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
         Ok(config) => config.get_ref(),
         Err(e) => return Err(ErrorInternalServerError(e)),
     };
-    let vips_data = req
-        .app_data::<Data<libvips::VipsApp>>()
-        .unwrap()
-        .get_ref();
+    let vips_data = req.app_data::<Data<libvips::VipsApp>>().unwrap().get_ref();
     let http_client = req
         .app_data::<Data<DaliHttpClient>>()
         .unwrap()
@@ -283,15 +280,12 @@ async fn main() -> std::io::Result<()> {
     let app_port = config_data.app_port;
     let health_port = config_data.health_port;
 
-    let server_client_timeout = std::time::Duration::new(
-        config_data.server_client_timeout.unwrap_or(5000), 0
-    );
-    let client_shutdown_timeout = std::time::Duration::new(
-        config_data.client_shutdown_timeout.unwrap_or(5000), 0
-    );
-    let server_keep_alive = std::time::Duration::new(
-        config_data.server_keep_alive.unwrap_or(7200) as u64, 0
-    );
+    let server_client_timeout =
+        std::time::Duration::new(config_data.server_client_timeout.unwrap_or(5000), 0);
+    let client_shutdown_timeout =
+        std::time::Duration::new(config_data.client_shutdown_timeout.unwrap_or(5000), 0);
+    let server_keep_alive =
+        std::time::Duration::new(config_data.server_keep_alive.unwrap_or(7200) as u64, 0);
 
     let _server_metrics = HttpServer::new(move || {
         App::new()
@@ -305,9 +299,8 @@ async fn main() -> std::io::Result<()> {
     .keep_alive(server_keep_alive)
     .run();
 
-    let http_client_con_timeout = std::time::Duration::new(
-        config_data.http_client_con_timeout.unwrap_or(5000), 0
-    );
+    let http_client_con_timeout =
+        std::time::Duration::new(config_data.http_client_con_timeout.unwrap_or(5000), 0);
 
     #[cfg(feature = "hyper_client")]
     let http_client: DaliHttpClient = http::client::init_client(http_client_con_timeout)
@@ -354,7 +347,7 @@ async fn main() -> std::io::Result<()> {
         #[cfg(feature = "awc_client")]
         {
             app = app.data_factory(move || {
-                http::client::init_client(client_timeoutas_secs())
+                http::client::init_client(http_client_con_timeout.as_millis().try_into().unwrap())
             });
         }
 

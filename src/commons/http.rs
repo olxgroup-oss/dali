@@ -6,6 +6,62 @@ use actix_web::Error;
 use log::*;
 use std::time::Duration;
 
+#[cfg(feature = "awc_client")]
+pub mod client {
+    use super::*;
+    use std::thread;
+
+    pub type HttpClient = awc::Client;
+
+    pub async fn init_client(http_client_timeout: u64) -> Result<HttpClient, Error> {
+        info!("Configure http client for {:?}", thread::current().id());
+        let client = HttpClient::builder()
+            .timeout(Duration::from_millis(http_client_timeout))
+            .finish();
+        Ok(client)
+    }
+
+    pub async fn get_file(
+        client: &HttpClient,
+        url: &str,
+        config: &Configuration,
+    ) -> Result<Bytes, Error> {
+        debug!("Fetching image from url {}", url);
+        let mut response = client.get(url).send().await.map_err(move |e| {
+            let error_str = format!("{}", e).replace("\"", "\\\"");
+            error!("Error to send request: {}", error_str);
+            actix_web::error::InternalError::new(
+                String::from("Error to send request"),
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            )
+        })?;
+        let status = response.status();
+        if status.is_success() {
+            response
+                .body()
+                // https://docs.rs/awc/2.0.0-alpha.1/awc/struct.MessageBody.html#method.limit
+                .limit(config.http_client_max_size_of_payload.unwrap_or(256 * 1024) as usize)
+                .await
+                .map_err(move |e| {
+                    let error_str = format!("{}", e).replace("\"", "\\\"");
+                    error!("Error getting http file: {}", error_str);
+                    actix_web::error::InternalError::new(
+                        String::from("Error reading stream."),
+                        status,
+                    )
+                    .into()
+                })
+        } else {
+            error!("Error getting http file {}: {}", status, url);
+            Err(actix_web::error::InternalError::new(
+                format!("Error fetching file: {}", status),
+                status,
+            )
+            .into())
+        }
+    }
+}
+
 #[cfg(feature = "hyper_client")]
 pub mod client {
     use super::*;
@@ -70,67 +126,11 @@ pub mod client {
                     let error_str = format!("{}", e).replace("\"", "\\\"");
                     error!("Error getting http file: {}", error_str);
                     Err(actix_web::error::InternalError::new(
-                        String::from("Error reading stream."), 
+                        String::from("Error reading stream."),
                         status
                     ).into())
                 }
             }
-        } else {
-            error!("Error getting http file {}: {}", status, url);
-            Err(actix_web::error::InternalError::new(
-                format!("Error fetching file: {}", status),
-                status,
-            )
-            .into())
-        }
-    }
-}
-
-#[cfg(feature = "awc_client")]
-pub mod client {
-    use super::*;
-    use std::thread;
-
-    pub type HttpClient = awc::Client;
-
-    pub async fn init_client(http_client_timeout: u64) -> Result<HttpClient, Error> {
-        info!("Configure http client for {:?}", thread::current().id());
-        let client = HttpClient::builder()
-            .timeout(Duration::from_millis(http_client_timeout))
-            .finish();
-        Ok(client)
-    }
-
-    pub async fn get_file(
-        client: &HttpClient,
-        url: &str,
-        config: &Configuration,
-    ) -> Result<Bytes, Error> {
-        debug!("Fetching image from url {}", url);
-        let mut response = client.get(url).send().await.map_err(move |e| {
-            let error_str = format!("{}", e).replace("\"", "\\\"");
-            error!("Error to send request: {}", error_str);
-            actix_web::error::InternalError::new(
-                String::from("Error to send request"),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
-            )
-        })?;
-        let status = response.status();
-        if status.is_success() {
-            response
-                .body()
-                // https://docs.rs/awc/2.0.0-alpha.1/awc/struct.MessageBody.html#method.limit
-                .limit(config.http_client_max_size_of_payload.unwrap_or(256 * 1024) as usize)
-                .await
-                .map_err(move |e| {
-                    let error_str = format!("{}", e).replace("\"", "\\\"");
-                    error!("Error getting http file: {}", error_str);
-                    actix_web::error::InternalError::new(
-                        String::from("Error reading stream."),
-                        status,
-                    )
-                    .into()
-                })
         } else {
             error!("Error getting http file {}: {}", status, url);
             Err(actix_web::error::InternalError::new(
