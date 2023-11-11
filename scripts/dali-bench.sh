@@ -36,7 +36,7 @@ run_benchmark() {
 
     wait_until_ready localhost 8080
 
-    BENCH_HTTP_HOST="http://127.0.0.1:8080" BENCH_FILE_SERVER_HOST="http://127.0.0.1:9000" cargo bench --features "${feature}" --bench "${benchmark}" -- --baseline-save "${feature}"
+    BENCH_HTTP_HOST="http://127.0.0.1:8080" BENCH_FILE_SERVER_HOST="http://127.0.0.1:9000" cargo bench --features "${feature}" --bench "${benchmark}" -- --save-baseline "${feature}"
     RCODE=$?
     stop_process ${PID} localhost 8080
 }
@@ -77,4 +77,4 @@ if [[ ${RCODE} -ne 0 ]]; then
     exit 1
 fi
 
-open "reports/criterion/${benchmark}/report/index.html"
+open "target/criterion/${benchmark}/report/index.html"
