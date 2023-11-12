@@ -11,7 +11,6 @@ use log::*;
 use serde_derive::*;
 use std::fmt;
 
-
 pub fn timestamp_millis() -> u128 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)

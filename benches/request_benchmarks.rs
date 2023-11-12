@@ -18,18 +18,17 @@ fn criterion_benchmark(c: &mut Criterion) {
     let rt = Runtime::new().unwrap();
     let client = Client::new();
     let http_url = std::env::var("BENCH_HTTP_HOST").expect("BENCH_HTTP_HOST not set");
-    let image_server = std::env::var("BENCH_FILE_SERVER_HOST").expect("BENCH_FILE_SERVER_HOST not set");
+    let image_server =
+        std::env::var("BENCH_FILE_SERVER_HOST").expect("BENCH_FILE_SERVER_HOST not set");
 
     let test_url = format!(
         "{}/?image_address={}/{}",
-        http_url,
-        image_server,
-        "highres&size[width]=500&quality=90&rotation=R90"
+        http_url, image_server, "highres&size[width]=500&quality=90&rotation=R90"
     )
     .to_string();
 
     println!("{}", test_url);
-    c.bench_function("external_server", |b| {
+    c.bench_function("request_benchmarks", |b| {
         // group.bench_function(BenchmarkId::new("GET", ""),|b| {
         let url = test_url.clone();
         b.iter(|| {

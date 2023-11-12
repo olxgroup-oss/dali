@@ -5,6 +5,11 @@ version = "1.5.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2021"
 
+# Cargo features are additive in nature and default features are included when
+# specifying additional features. There is no ability to remove a default.
+# Since we set a default, we must negate the existence of `awc_client`, which is
+# mutually exclusive to the default, `hyper_client`, in order to get a clean
+# build.
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]
@@ -15,6 +20,8 @@ pkg-config = "0.3.27"
 
 [dev-dependencies]
 awc = { version = "3.2.0", features = [] }
+# hyper = { version = "0.14.27", features=["full"]  }
+# hyper-timeout = { version = "0.4.1" }
 
 [dependencies]
 futures = "0.3.29"
@@ -27,14 +34,14 @@ prometheus = {version = "0.13.3", features = ["process", "nightly"] }
 prometheus-static-metric = "0.5.1"
 log = "0.4.20"
 env_logger = "0.10.0"
-serde = "1.0.190"
-serde_derive = "1.0.190"
+serde = "1.0.192"
+serde_derive = "1.0.192"
 serde_json = "1.0.108"
 serde_qs = {version = "0.12.0", features=["actix4"]}
 config = "0.13.3"
 hyper = { version = "0.14.27", features=["full"], optional = true }
 hyper-timeout = { version = "0.4.1", optional = true }
-libvips = "1.5.0"
+libvips = "1.6.1"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
 cfg-if = "1.0.0"

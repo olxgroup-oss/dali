@@ -1,19 +1,24 @@
 // (c) Copyright 2019-2023 OLX
-#[macro_use]
-#[cfg(all(feature = "hyper_client", feature = "awc_client"))]
-compile_error!("features `crate/hyper_client` and `crate/awc` are mutually exclusive");
 
 #[macro_use]
 extern crate cfg_if;
 
+// We need to negate the feature = `awc_client` in order for the default
+// `hyper_client` to be used, without generating a complier error, as the two
+// implmentations are mutaully exclusive.
+// Any feature that is set as a default is carried over to any one features that
+// are enabled, as features are additive by design.
+
 cfg_if! {
-    if #[cfg(feature = "hyper_client")] {
+   if #[cfg(not(feature = "awc_client"))] {
         use hyper::{Client, client::HttpConnector};
         use hyper_timeout::TimeoutConnector;
         type DaliHttpClient = Client<TimeoutConnector<HttpConnector>>;
-    } else {
+    } else if #[cfg(feature = "awc_client")] {
         use awc::Client;
         type DaliHttpClient = Client;
+    } else {
+        compile_error!("features `hyper_client` or `awc_client` must be chosen. None found.");
     }
 }
 
@@ -302,7 +307,7 @@ async fn main() -> std::io::Result<()> {
     let http_client_con_timeout =
         std::time::Duration::new(config_data.http_client_con_timeout.unwrap_or(5000), 0);
 
-    #[cfg(feature = "hyper_client")]
+    #[cfg(not(feature = "awc_client"))]
     let http_client: DaliHttpClient = http::client::init_client(http_client_con_timeout)
         .await
         .expect("Can't initilize http client");
@@ -338,12 +343,14 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/").route(web::get().to(index)));
 
         // one global http client for all threads/workers
-        #[cfg(feature = "hyper_client")]
+
+        #[cfg(not(feature = "awc_client"))]
         {
             app = app.app_data(Data::new(http_client.clone()));
         }
 
         // one http client per thread/worker
+
         #[cfg(feature = "awc_client")]
         {
             app = app.data_factory(move || {

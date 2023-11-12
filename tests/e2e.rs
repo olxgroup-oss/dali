@@ -23,9 +23,8 @@ fn test_get_rotated() {
 
 #[test]
 fn test_get_resized() {
-    let result =
-        make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
-            .expect("Unable to download file");
+    let result = make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
+        .expect("Unable to download file");
     utils::assert_result(&result[..], "resized.jpg");
 }
 
