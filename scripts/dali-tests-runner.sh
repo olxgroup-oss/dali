@@ -2,12 +2,19 @@
 # requires docker service to be running
 
 features="${1:-hyper_client}"
+binary="dali"
+binary_extra=""
+if [ "${features}" == "awc_client" ];then
+    binary_extra="_awc"
+fi
+
+binary="${binary}${binary_extra}"
 
 run_tests() {
-    HTTP_HOST=localhost:9000 RUN_MODE=default cargo run --features "${features}" >> /dev/null &
+    HTTP_HOST=localhost:9000 RUN_MODE=default cargo run --bin ${binary} --features "${features}" >> /dev/null &
     PID=$!
     wait_until_ready localhost 8080
-    HTTP_HOST=localhost:9000 cargo test --features "${features}"
+    HTTP_HOST=localhost:9000 cargo test --bin ${binary} --features "${features}"
     RCODE=$?
     stop_process ${PID} localhost 8080
 }
@@ -30,7 +37,7 @@ stop_process() {
 }
 
 setup() {
-    docker run --rm -v ./tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.23.3-alpine-slim
+    docker run --rm -v ./tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.25.3-alpine-slim
     wait_until_ready localhost 9000
 }
 

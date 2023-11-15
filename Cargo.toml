@@ -41,7 +41,10 @@ serde_qs = {version = "0.12.0", features=["actix4"]}
 config = "0.13.3"
 hyper = { version = "0.14.27", features=["full"], optional = true }
 hyper-timeout = { version = "0.4.1", optional = true }
-libvips = "1.6.1"
+# or use a git path or remote repo and branch
+# libvips = {git = "file:///absolute/path/to/git/repo", rev = "12345"}
+libvips = {git = "https://github.com/olxgroup-oss/libvips-rust-bindings.git", branch = "make-error-messages-explicit"}
+# libvips = "1.5.0"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
 cfg-if = "1.0.0"
@@ -67,9 +70,27 @@ debug = 2
 debug = 1
 opt-level = 0
 codegen-units = 8
-incremental = false
+incremental = true
 
 [profile.release]
 incremental = true
 debug = 0 # Set this to 1 or 2 to get more useful backtraces in debugger.
 opt-level = 3 # Optimize for size
+
+[profile.awc]
+inherits = "test"
+# Disabling debug info speeds up builds a bunch,
+# and we don't rely on it for debugging that much.
+debug = 1
+opt-level = 0
+codegen-units = 8
+incremental = true
+
+
+[[bin]]
+name = "dali"
+path = "src/main.rs"
+[[bin]]
+name = "dali_awc"
+#filename = "dali_awc"
+path = "src/main.rs"

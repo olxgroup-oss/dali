@@ -6,6 +6,14 @@
 benchmark="${1:?"Please specify which benchmark file you want to test"}"
 features="${2:-hyper_client}"
 
+binary="dali"
+binary_extra=""
+if [ "${features}" == "awc_client" ];then
+    binary_extra="_awc"
+fi
+
+binary="${binary}${binary_extra}"
+
 # We can run the server with  different features to test different server implementations
 # current the is hyper_client, the default, and awc_client
 # we need cargo-criterion crate installed so that we can compare the
@@ -30,7 +38,7 @@ run_benchmark() {
     echo "Running benchmark $benchmark using the feature:$features"
     sleep 5
 
-    HTTP_HOST=localhost:8080 RUN_MODE=default cargo run --features "${features}" >> /dev/null &
+    HTTP_HOST=localhost:8080 RUN_MODE=default cargo run --features "${features}" --bin "${binary}">> /dev/null &
     PID=$!
     echo "Dali:[$features] is running on PID($PID)"
 
@@ -60,7 +68,7 @@ stop_process() {
 
 setup() {
     # docker: -p outside:inside
-    docker run --rm -v ./tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.23.3-alpine-slim
+    docker run --rm -v ./tests/resources/:/usr/share/nginx/html/ -p 9000:80 --name dali-http-nginx-source -d nginx:1.25.3-alpine-slim
     wait_until_ready localhost 9000
 }
 

@@ -121,7 +121,7 @@ pub mod client {
             response
                 .body()
                 // https://docs.rs/awc/2.0.0-alpha.1/awc/struct.MessageBody.html#method.limit
-                .limit(config.http_client_max_size_of_payload.unwrap_or(256 * 1024) as usize)
+                .limit(config.http_client_max_size_of_payload.unwrap_or(1024 * 1024) as usize)
                 .await
                 .map_err(move |e| {
                     let error_str = format!("{}", e).replace("\"", "\\\"");
