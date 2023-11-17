@@ -10,7 +10,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: rust:1.73.0-alpine3.17
+    container: rust:1.73.0-alpine3.18
     services:
       backend:
         image: nginx:latest
@@ -23,12 +23,12 @@ jobs:
           args: docker restart backend
       - name: Install build dependencies
         run:  apk add --update --no-cache
-          --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
-          --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
+          --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/community
+          --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/main
           curl
-          musl-dev=1.2.3-r5
-          vips-dev=8.13.3-r1
-          vips-heif=8.13.3-r1
+          musl-dev=1.2.4-r2
+          vips-dev=8.14.3-r0
+          vips-heif=8.14.3-r0
           tar
           openssl
       - name: Check if nginx is available for files hosting
@@ -41,6 +41,6 @@ jobs:
       - name: Check if Dali is running
         run:  sleep 5 &&  nc -z localhost 8080
       - name: Run tests
-        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
+        run:  RUST_BACKTRACE=1 RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
       - name: Exit with the test result
         run:  exit $?
