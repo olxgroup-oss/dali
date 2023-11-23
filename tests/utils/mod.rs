@@ -1,9 +1,9 @@
 // (c) Copyright 2019-2023 OLX
 
+use actix_http::client::SendRequestError;
 use actix_rt::System;
-use awc::Client;
+use actix_web::client::Client;
 use actix_web::web::Bytes;
-use awc::error::SendRequestError;
 use libvips::ops;
 use libvips::VipsApp;
 use libvips::VipsImage;
@@ -120,13 +120,13 @@ pub fn assert_result(img: &[u8], image_address: &str) {
 }
 
 pub fn make_request(params: RequestParametersBuilder) -> Result<Bytes, SendRequestError> {
-    System::new().block_on(async move {
+    System::new("test").block_on(async move {
         let client = Client::default();
 
         let url = get_url(&params);
         println!("URL: {}", url);
 
-        let request = client.get(url).send();
+        let request = client.get(url).header("User-Agent", "Actix-web").send();
         let mut response = request.await?;
         println!("Response: {:?}", response);
         response

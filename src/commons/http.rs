@@ -9,7 +9,7 @@ use std::time::Duration;
 #[cfg(feature = "hyper_client")]
 pub mod client {
     use super::*;
-    use hyper::body::{to_bytes, Buf};
+    use hyper::body::to_bytes;
     use hyper::Uri;
     use std::str::FromStr;
 
@@ -20,14 +20,14 @@ pub mod client {
         hyper::Body,
     >;
 
-    pub async fn init_client(http_client_timeout: Duration) -> Result<HttpClient, Error> {
+    pub async fn init_client(http_client_timeout: u64) -> Result<HttpClient, Error> {
         let hyper_builder = hyper::Client::builder();
         let http_connector = hyper::client::HttpConnector::new();
         let mut http_timeout_connector = hyper_timeout::TimeoutConnector::new(http_connector);
         http_timeout_connector
-            .set_connect_timeout(Some(http_client_timeout));
-        http_timeout_connector.set_write_timeout(Some(http_client_timeout));
-        http_timeout_connector.set_read_timeout(Some(http_client_timeout));
+            .set_connect_timeout(Some(Duration::from_millis(http_client_timeout)));
+        http_timeout_connector.set_write_timeout(Some(Duration::from_millis(http_client_timeout)));
+        http_timeout_connector.set_read_timeout(Some(Duration::from_millis(http_client_timeout)));
         let hyper_http_client = hyper_builder.build::<_, hyper::Body>(http_timeout_connector);
         Ok(hyper_http_client)
     }
@@ -62,19 +62,12 @@ pub mod client {
         })?;
         let status = response.status();
         if response.status().is_success() {
-            match to_bytes(response.into_body()).await {
-                Ok(bytes) => {
-                    Ok(Bytes::from(bytes.chunk().to_owned()))
-                },
-                Err(e) => {
-                    let error_str = format!("{}", e).replace("\"", "\\\"");
-                    error!("Error getting http file: {}", error_str);
-                    Err(actix_web::error::InternalError::new(
-                        String::from("Error reading stream."), 
-                        status
-                    ).into())
-                }
-            }
+            to_bytes(response.into_body()).await.map_err(move |e| {
+                let error_str = format!("{}", e).replace("\"", "\\\"");
+                error!("Error getting http file: {}", error_str);
+                actix_web::error::InternalError::new(String::from("Error reading stream."), status)
+                    .into()
+            })
         } else {
             error!("Error getting http file {}: {}", status, url);
             Err(actix_web::error::InternalError::new(
@@ -86,17 +79,20 @@ pub mod client {
     }
 }
 
-#[cfg(feature = "awc_client")]
+#[cfg(feature = "awc")]
 pub mod client {
     use super::*;
+    use actix_web::client::{Client, Connector};
     use std::thread;
 
-    pub type HttpClient = awc::Client;
+    pub type HttpClient = actix_web::client::Client;
 
     pub async fn init_client(http_client_timeout: u64) -> Result<HttpClient, Error> {
         info!("Configure http client for {:?}", thread::current().id());
-        let client = HttpClient::builder()
+        let connector = Connector::new().limit(0).finish();
+        let client = Client::build()
             .timeout(Duration::from_millis(http_client_timeout))
+            .connector(connector)
             .finish();
         Ok(client)
     }
@@ -112,7 +108,7 @@ pub mod client {
             error!("Error to send request: {}", error_str);
             actix_web::error::InternalError::new(
                 String::from("Error to send request"),
-                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+                actix_http::http::StatusCode::INTERNAL_SERVER_ERROR,
             )
         })?;
         let status = response.status();

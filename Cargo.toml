@@ -3,39 +3,31 @@
 name = "dali"
 version = "1.5.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
-edition = "2021"
+edition = "2018"
 
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]
-awc_client = ["awc"]
-
-[build-dependencies]
-pkg-config = "0.3.27"
-
-[dev-dependencies]
-awc = { version = "3.2.0", features = [] }
+awc = []
 
 [dependencies]
 futures = "0.3.29"
-actix-web = "4.4.0"
-actix-rt = "2.9.0"
-actix-service = "2.0.2"
-actix-http = "3.4.0"
+actix-web = "2.0.0"
+actix-rt = "1.1.1"
+actix-service = "1.0.6"
+actix-http = "1.0.1"
 num_cpus = "1.16.0"
 prometheus = {version = "0.13.3", features = ["process", "nightly"] }
 prometheus-static-metric = "0.5.1"
 log = "0.4.20"
-env_logger = "0.10.1"
-serde = "1.0.192"
-serde_derive = "1.0.192"
+env_logger = "0.10.0"
+serde = "1.0.190"
+serde_derive = "1.0.190"
 serde_json = "1.0.108"
-serde_qs = {version = "0.12.0", features=["actix4"]}
+serde_qs = {version = "0.7.0", features=["actix"]}
 config = "0.13.3"
-hyper = { version = "0.14.27", features=["full"], optional = true }
-hyper-timeout = { version = "0.4.1", optional = true }
+hyper = { version = "0.13.7", optional = true }
+hyper-timeout = { version = "0.3.1", optional = true }
 libvips = "1.5.0"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
-cfg-if = "1.0.0"
-awc = {version = "3.2.0", features=[], optional = true}
