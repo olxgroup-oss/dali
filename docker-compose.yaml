@@ -1,0 +1,18 @@
+version: '3'
+services:
+  backend:
+    image: nginx
+    volumes:
+      - ./tests/resources/:/usr/share/nginx/html/
+    ports:
+      - 9000:80
+  dali:
+    image: ${RUNTIME_IMAGE:-ghcr.io/olxgroup-oss/dali/dali}:${RUNTIME_TAG:-latest}
+    volumes:
+      - ./config:/config
+    ports:
+      - 8080:18080
+      - 8081:18081
+    environment:
+      - RUN_MODE=compose
+      - HTTP_HOST=backend:80

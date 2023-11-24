@@ -1,0 +1,16 @@
+# (c) Copyright 2019-2023 OLX
+FROM alpine:3.18.4
+
+RUN apk add --update --no-cache \
+    --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/community \
+    --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/main \
+    vips=8.14.3-r0 \
+    vips-heif=8.14.3-r0 \
+    openssl
+
+COPY --chown=root:root --chmod=655 ./target/release/dali /usr/local/bin/dali
+#COPY ./target/release/dali /usr/local/bin/dali
+
+USER nobody
+
+CMD ["dali"]

@@ -39,26 +39,98 @@ The application will compute the number of threads by the following formula: `po
 ### Requirements
 
 * Libvips
-* A HTTP server for images
-* Docker
+* An HTTP server for images - we use nginx via docker
+* Docker/Podman
 * Rust
+* make
+* git
 
-This application relies on C libvips library. That means it has to be previously installed into the system before compiling and/or running.
+This application relies on C libvips library. That means it has to be installed on your system before compiling and/or running.
 
-For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.10.1)
+For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required version 8.14.4)
 
 Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup update`.
 
 To build and run the application, run the following command:
 
-``` cargo run ```
+```console
+cargo run
+```
 
 _Note: if you're building the application on a `linux musl` system, you'll need to set this env variable: `RUSTFLAGS='-C target-feature=-crt-static'`_
 _if it fails to compile because of the linker, try to add the result of `pkg-config --libs vips` to `RUSTFLAGS=` env variable`_
 
-Alternatively, it is possible to run both components inside docker (once you build them):
+### testing options
 
-```make up```
+There are two methods in which tests can be run. 
+
+> Please note that the two testing methods are mutualy exclusive as they share the same port numbers.
+
+To link the dali server to the nginx server running in _*docker compose*_, an env variable, `HTTP_HOST` is required to be set. If it is not set, it defaults to `localhost:9000`. See the [.envrc](.envrc) file for more details.
+
+`RUN_MODE` allows different configuration files to be loaded from the [./config](./config) folder.
+
+The default value will load the [default](./config/default.json) file.
+
+Other values provided are:
+
+* [compose](./config/compose.json)
+* [production](./config/production.json)
+
+Please create and customise your own values for your environment.
+
+#### Code based tests
+
+Code based helper script, `./scripts/dali-test-runner.sh` can be used which will:
+
+  1. start nginx to serve the images under `test/resources`
+  1. start dali to receive requests using `cargo run`
+  1. run the tests
+  1. stop nginx and the dali server
+
+The helper `make` command is:
+
+```console
+make test
+```
+
+#### Docker compose using container images
+
+The workflow is as follows:
+
+* create a PR on github with your changes
+* the PR workflow with create a preview container image
+* the build workflow will add the container image as a PR comment;once it is built
+* the preview image will be used for the testing. i.e. you are testing against a fully functional container image
+
+> You can run the tests on the default branch, as the latest released container image will be used
+
+We have setup `docker compose` to run in the foreground so that the logs are visible.
+
+```console
+make up
+```
+
+In a second terminal:
+
+Run the unit test suite.
+
+```console
+cargo test --bin dali
+# this unit test uses mocks and nginx is not required
+```
+
+Or, run the full e2e suite.
+
+```console
+cargo test
+# or if you do not have direnv set the env var
+HTTP_HOST=backend:80 cargo test
+```
+
+By default, the current branch is used to pull an image of **dali** from the github package registry. This allows you to create a preview container image that is publically available. This can be used for smoke tests or other benchmark tests, before a release and new version is published.
+
+When the PR is closed, the preview image is removed from the github package registry. Or, will be, once we work out to setup for the workflow :wink:.
 
 ## Testing
 
@@ -78,7 +150,7 @@ To run the tests, the script will start the containers through `docker-compose`,
 
 This is an experimental feature from rust, so in order to use, the nightly rust toolchain has to be enabled. To do that run:
 
-```
+```console
 rustup toolchain install nightly
 rustup default nightly
 ```
@@ -89,7 +161,9 @@ To run the benchmark, simply call `cargo bench` (application must be running at 
 
 It outputs the average time per iteration and the deviation between max and min. Example output from a 4 core 2.3GHz MacBook (application running inside docker limited to 4 cores and with 4 workers):
 
-```test bench_highhes ... bench:  71,112,344 ns/iter (+/- 7,798,699)```
+```console
+test bench_highhes ... bench:  71,112,344 ns/iter (+/- 7,798,699)
+```
 
 ## API
 

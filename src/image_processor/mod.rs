@@ -58,8 +58,7 @@ pub fn process_image(
         *input_size += wm_buffer.len() as u32;
         let watermark = &watermarks[i];
         debug!("Applying watermark: {:?}", watermark);
-        let wm =
-            VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
+        let wm = VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
 
         let wm_width = wm.get_width();
         let wm_height = wm.get_height();

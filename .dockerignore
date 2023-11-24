@@ -1,4 +1,5 @@
-target
-.git
-.github
-.gitignore
+**
+
+!target/release/dali
+!LICENSE
+!README.md

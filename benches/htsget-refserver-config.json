@@ -1,0 +1,28 @@
+{
+  "htsgetConfig": {
+    "props": {
+      "port": 8082,
+      "host": "http://localhost:8082/"
+    },
+    "reads": {
+      "dataSourceRegistry": {
+        "sources": [
+          {
+            "pattern": "^(?P<id>.*)$",
+            "path": "/data/bam/{id}.bam"
+          }
+        ]
+      }
+    },
+    "variants": {
+      "dataSourceRegistry": {
+        "sources": [
+          {
+            "pattern": "^(?P<id>.*)$",
+            "path": "/data/vcf/{id}.vcf.gz"
+          }
+        ]
+      }
+    }
+  }
+}

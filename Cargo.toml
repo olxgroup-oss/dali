@@ -5,6 +5,11 @@ version = "1.5.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2021"
 
+# Cargo features are additive in nature and default features are included when
+# specifying additional features. There is no ability to remove a default.
+# Since we set a default, we must negate the existence of `awc_client`, which is
+# mutually exclusive to the default, `hyper_client`, in order to get a clean
+# build.
 [features]
 default = ["hyper_client"]
 hyper_client = ["hyper", "hyper-timeout"]
@@ -15,6 +20,8 @@ pkg-config = "0.3.27"
 
 [dev-dependencies]
 awc = { version = "3.2.0", features = [] }
+# hyper = { version = "0.14.27", features=["full"]  }
+# hyper-timeout = { version = "0.4.1" }
 
 [dependencies]
 futures = "0.3.29"
@@ -34,8 +41,56 @@ serde_qs = {version = "0.12.0", features=["actix4"]}
 config = "0.13.4"
 hyper = { version = "0.14.27", features=["full"], optional = true }
 hyper-timeout = { version = "0.4.1", optional = true }
-libvips = "1.5.0"
+# or use a git path or remote repo and branch
+# libvips = {git = "file:///absolute/path/to/git/repo", rev = "12345"}
+libvips = {git = "https://github.com/olxgroup-oss/libvips-rust-bindings.git", branch = "make-error-messages-explicit"}
+# libvips = "1.5.0"
 rexif = "0.7.3"
 lazy_static = "1.4.0"
 cfg-if = "1.0.0"
 awc = {version = "3.2.0", features=[], optional = true}
+criterion = "0.5.1"
+tokio = "1.34.0"
+#criterion = {version = "0.5.1", features=[ "default", "cargo_bench_support","plotters", "rayon","tokio","html_reports"], optional = true}
+#criterion = {version = "0.5.1", features=[ "full"], optional = true}
+
+[[bench]]
+name = "request_benchmarks"
+harness = false
+
+[profile.vscode]
+inherits = "dev"
+opt-level = 0               # Use slightly better optimizations.
+overflow-checks = false     # Disable integer overflow checks.
+debug = 2
+
+[profile.dev]
+# Disabling debug info speeds up builds a bunch,
+# and we don't rely on it for debugging that much.
+debug = 1
+opt-level = 0
+codegen-units = 8
+incremental = true
+
+[profile.release]
+incremental = true
+debug = 0 # Set this to 1 or 2 to get more useful backtraces in debugger.
+opt-level = 3 # Optimize for size
+
+[profile.awc]
+inherits = "test"
+# Disabling debug info speeds up builds a bunch,
+# and we don't rely on it for debugging that much.
+debug = 1
+opt-level = 0
+codegen-units = 8
+incremental = true
+
+
+[[bin]]
+name = "dali"
+path = "src/main.rs"
+[[bin]]
+name = "dali_awc"
+#filename = "dali_awc"
+path = "src/main.rs"

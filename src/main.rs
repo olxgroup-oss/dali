@@ -1,19 +1,24 @@
 // (c) Copyright 2019-2023 OLX
-#[macro_use]
-#[cfg(all(feature = "hyper_client", feature = "awc_client"))]
-compile_error!("features `crate/hyper_client` and `crate/awc` are mutually exclusive");
 
 #[macro_use]
 extern crate cfg_if;
 
+// We need to negate the feature = `awc_client` in order for the default
+// `hyper_client` to be used, without generating a complier error, as the two
+// implmentations are mutaully exclusive.
+// Any feature that is set as a default is carried over to any one features that
+// are enabled, as features are additive by design.
+
 cfg_if! {
-    if #[cfg(feature = "hyper_client")] {
+   if #[cfg(not(feature = "awc_client"))] {
         use hyper::{Client, client::HttpConnector};
         use hyper_timeout::TimeoutConnector;
         type DaliHttpClient = Client<TimeoutConnector<HttpConnector>>;
-    } else {
+    } else if #[cfg(feature = "awc_client")] {
         use awc::Client;
         type DaliHttpClient = Client;
+    } else {
+        compile_error!("features `hyper_client` or `awc_client` must be chosen. None found.");
     }
 }
 
@@ -30,6 +35,7 @@ use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer,
 };
 
+use actix_web::dev::Service;
 use futures::future::{self, join_all};
 use image_processor::*;
 use lazy_static::*;
@@ -38,7 +44,6 @@ use log::*;
 use prometheus::*;
 use prometheus_static_metric::*;
 use std::{env, iter::once, time::SystemTime};
-use actix_web::dev::Service;
 
 make_static_metric! {
     pub struct HttpRequestDuration: Histogram {
@@ -117,11 +122,7 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
         Ok(config) => config.get_ref(),
         Err(e) => return Err(ErrorInternalServerError(e)),
     };
-    let vips_data = req
-        .app_data::<Data<libvips::VipsApp>>()
-        .unwrap()
-        .get_ref()
-        .clone();
+    let vips_data = req.app_data::<Data<libvips::VipsApp>>().unwrap().get_ref();
     let http_client = req
         .app_data::<Data<DaliHttpClient>>()
         .unwrap()
@@ -284,15 +285,12 @@ async fn main() -> std::io::Result<()> {
     let app_port = config_data.app_port;
     let health_port = config_data.health_port;
 
-    let server_client_timeout = std::time::Duration::new(
-        config_data.server_client_timeout.unwrap_or(5000), 0
-    );
-    let client_shutdown_timeout = std::time::Duration::new(
-        config_data.client_shutdown_timeout.unwrap_or(5000), 0
-    );
-    let server_keep_alive = std::time::Duration::new(
-        config_data.server_keep_alive.unwrap_or(7200) as u64, 0
-    );
+    let server_client_timeout =
+        std::time::Duration::new(config_data.server_client_timeout.unwrap_or(5000), 0);
+    let client_shutdown_timeout =
+        std::time::Duration::new(config_data.client_shutdown_timeout.unwrap_or(5000), 0);
+    let server_keep_alive =
+        std::time::Duration::new(config_data.server_keep_alive.unwrap_or(7200) as u64, 0);
 
     let _server_metrics = HttpServer::new(move || {
         App::new()
@@ -306,11 +304,10 @@ async fn main() -> std::io::Result<()> {
     .keep_alive(server_keep_alive)
     .run();
 
-    let http_client_con_timeout = std::time::Duration::new(
-        config_data.http_client_con_timeout.unwrap_or(5000), 0
-    );
+    let http_client_con_timeout =
+        std::time::Duration::new(config_data.http_client_con_timeout.unwrap_or(5000), 0);
 
-    #[cfg(feature = "hyper_client")]
+    #[cfg(not(feature = "awc_client"))]
     let http_client: DaliHttpClient = http::client::init_client(http_client_con_timeout)
         .await
         .expect("Can't initilize http client");
@@ -346,16 +343,18 @@ async fn main() -> std::io::Result<()> {
             .service(web::resource("/").route(web::get().to(index)));
 
         // one global http client for all threads/workers
-        #[cfg(feature = "hyper_client")]
+
+        #[cfg(not(feature = "awc_client"))]
         {
             app = app.app_data(Data::new(http_client.clone()));
         }
 
         // one http client per thread/worker
+
         #[cfg(feature = "awc_client")]
         {
             app = app.data_factory(move || {
-                http::client::init_client(client_timeoutas_secs())
+                http::client::init_client(http_client_con_timeout.as_millis().try_into().unwrap())
             });
         }
 

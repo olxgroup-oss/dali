@@ -6,7 +6,10 @@ use actix_web::Error;
 use log::*;
 use std::time::Duration;
 
-#[cfg(feature = "hyper_client")]
+// This is the incumbent `hyper_client` default feature.
+// When choosing feature = `awc_cleint`; `hyper_client` is also present, as it is a default
+// Therefore, we use the not `awc_client` feature to enable the default behaviour
+#[cfg(not(feature = "awc_client"))]
 pub mod client {
     use super::*;
     use hyper::body::{to_bytes, Buf};
@@ -24,8 +27,7 @@ pub mod client {
         let hyper_builder = hyper::Client::builder();
         let http_connector = hyper::client::HttpConnector::new();
         let mut http_timeout_connector = hyper_timeout::TimeoutConnector::new(http_connector);
-        http_timeout_connector
-            .set_connect_timeout(Some(http_client_timeout));
+        http_timeout_connector.set_connect_timeout(Some(http_client_timeout));
         http_timeout_connector.set_write_timeout(Some(http_client_timeout));
         http_timeout_connector.set_read_timeout(Some(http_client_timeout));
         let hyper_http_client = hyper_builder.build::<_, hyper::Body>(http_timeout_connector);
@@ -63,16 +65,15 @@ pub mod client {
         let status = response.status();
         if response.status().is_success() {
             match to_bytes(response.into_body()).await {
-                Ok(bytes) => {
-                    Ok(Bytes::from(bytes.chunk().to_owned()))
-                },
+                Ok(bytes) => Ok(Bytes::from(bytes.chunk().to_owned())),
                 Err(e) => {
                     let error_str = format!("{}", e).replace("\"", "\\\"");
                     error!("Error getting http file: {}", error_str);
                     Err(actix_web::error::InternalError::new(
-                        String::from("Error reading stream."), 
-                        status
-                    ).into())
+                        String::from("Error reading stream."),
+                        status,
+                    )
+                    .into())
                 }
             }
         } else {
@@ -120,7 +121,7 @@ pub mod client {
             response
                 .body()
                 // https://docs.rs/awc/2.0.0-alpha.1/awc/struct.MessageBody.html#method.limit
-                .limit(config.http_client_max_size_of_payload.unwrap_or(256 * 1024) as usize)
+                .limit(config.http_client_max_size_of_payload.unwrap_or(1024 * 1024) as usize)
                 .await
                 .map_err(move |e| {
                     let error_str = format!("{}", e).replace("\"", "\\\"");

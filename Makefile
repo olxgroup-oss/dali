@@ -1,18 +1,24 @@
 # (c) Copyright 2019-2023 OLX
+
 DOCKER_REGISTRY ?= ghcr.io
 DOCKER_ORG ?= olxgroup-oss
-DALI_IMAGE_NAME ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/dali/dali
-BUILD_NUMBER ?= $(shell ./scripts/get-current-version.sh)
-
-ifeq ($(REVISION),)
-	VERSION_TAG ?= $(BUILD_NUMBER)
-else
-	VERSION_TAG ?= $(REVISION)-preview
-endif
+PROJECT_NAME=dali
+DALI_IMAGE_NAME ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME)/$(PROJECT_NAME)
+DALI_IMAGE_TAG ?= $(shell git branch --show-current)
 
 SUDO := $(shell docker info >/dev/null 2>&1 || echo sudo)
 
-.PHONY: test run docker-build docker-publish
+.PHONY: up down test run pull
+
+up: pull
+	RUNTIME_IMAGE=$(DALI_IMAGE_NAME) RUNTIME_TAG=$(DALI_IMAGE_TAG) $(SUDO) docker compose -p $(PROJECT_NAME) \
+			-f docker-compose.yaml \
+			up --remove-orphans --exit-code-from dali
+
+down:
+	RUNTIME_IMAGE=$(DALI_IMAGE_NAME) RUNTIME_TAG=$(DALI_IMAGE_TAG) $(SUDO) docker compose -p $(PROJECT_NAME) \
+			-f docker-compose.yaml \
+			down --remove-orphans --volumes
 
 test:
 	@ ./scripts/dali-tests-runner.sh
@@ -20,8 +26,6 @@ test:
 run:
 	@ cargo run
 
-docker-build:
-	@ docker build -t ${DALI_IMAGE_NAME}:${VERSION_TAG} .
+pull:
+	@ $(SUDO) docker pull ${DALI_IMAGE_NAME}:${DALI_IMAGE_TAG}
 
-docker-publish: docker-build
-	@ docker push ${DALI_IMAGE_NAME}:${VERSION_TAG}
