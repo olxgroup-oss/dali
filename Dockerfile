@@ -86,7 +86,7 @@ RUN apk add --update --no-cache  \
       libwebp=1.3.2-r0 \
       libimagequant=4.2.0-r0 \
       libheif=1.16.2-r0 \
-      libde265=1.0.12-r0 \
+      libde265=1.0.12-r0
 
 ENV GI_TYPELIB_PATH=/usr/local/lib/girepository-1.0
 
