@@ -76,7 +76,7 @@ jobs:
 
   stop-the-bots:
     runs-on: ubuntu-latest
-    if: ${{!(github.triggering_actor == 'dependabot[bot]' || github.triggering_actor == 'renovate[bot]') && github.repository == 'olxgroup-oss/dali'}}
+    if: ${{!(github.triggering_actor == 'dependabot[bot]' || github.triggering_actor == 'renovate[bot]') && github.repository == 'olxgroup-oss/dali'}} # prevent running on forks
 
   # Only runs if a pull request is created
   # ignored by renovate branch auto-commit strategy, which does not create PRs
