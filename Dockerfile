@@ -63,7 +63,7 @@ RUN apk add --update --no-cache  \
       libpng=1.6.39-r3 \
       librsvg=2.56.3-r0 \
       libwebp=1.3.2-r0 \
-      openssl=3.1.4-r2 \
+      openssl=3.1.4-r1 \
       orc=0.4.34-r0 \
       tiff=4.5.1-r0
 
