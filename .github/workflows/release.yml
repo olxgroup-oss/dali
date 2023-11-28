@@ -22,7 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
         with:
-          semantic_version: 19.0.5
+          semantic_version: 22.0.8
           dry_run: false
           extra_plugins: |
             @semantic-release/changelog@v6.0.3
