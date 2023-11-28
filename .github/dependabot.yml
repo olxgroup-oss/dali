@@ -17,13 +17,6 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-  - package-ecosystem: "rust"
-    directory: "/"
-    schedule:
-      # infrequent updates as this is a library: security updates shouldn't need
-      # a major version bump, and minor versions can be controlled by users
-      # Cargo.lock as they will be compatible.
-      interval: "monthly"
   - package-ecosystem: docker
     directory: "/"
     schedule:
