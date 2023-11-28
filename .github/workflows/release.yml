@@ -7,13 +7,32 @@ on:
     branches:
       - master
 
+# Only allow one release workflow to execute at a time, since each release
+# workflow uses shared resources (git tags, package registries)
+concurrency:
+  group: ${{ github.workflow }}
+
+
 jobs:
+  get-next-version:
+    uses: semantic-release-action/next-release-version/.github/workflows/next-release-version.yml@v4
+
   release:
     runs-on: ubuntu-latest
+    name: Release
+    if: needs.get-next-version.outputs.new-release-published == 'true'
+    needs:
+      - get-next-version
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # Install the dependency for @semantic-release/exec
+      - name: Install semantic-release-cargo
+        uses: taiki-e/install-action@v2
+        with:
+          tool: semantic-release-cargo@2
 
       - name: Semantic Release
         id: semantic
@@ -21,15 +40,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_USER: ${{ github.repository_owner }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         with:
           semantic_version: 22.0.8
           dry_run: false
           extra_plugins: |
             @commitlint/config-conventional@18.4.3
-            @semantic-release-cargo/semantic-release-cargo@2.2.41
             @semantic-release/changelog@v6.0.3
             @semantic-release/commit-analyzer@11.1.0
+            @semantic-release/exec@6.0.3
             @semantic-release/git@10.0.1
             @semantic-release/github@9.2.3
             @semantic-release/release-notes-generator@12.1.0
