@@ -38,32 +38,37 @@ COPY . .
 RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
 
 FROM alpine:3.18.4
+ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
 
+# With the next command, the libvips bianries are copied from the previous stage hence we don't have to install it again.
+# The default location where the `configure` script installs libvips is `/usr/local/lib` unless overridden by `--prefix`
+# which we don't do.
+# !!! Also it's essential for the next `COPY` command to be executed before adding the rest of the packages thus the
+# libvips binaries are included in the ldconfig cache.
 COPY --from=build /usr/local/lib /usr/local/lib
 
 RUN apk add --update --no-cache  \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/main  \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/community \
-      libgsf=1.14.50-r1 \
-      glib=2.76.4-r0 \
       expat=2.5.0-r1 \
-      tiff=4.5.1-r0 \
-      libjpeg-turbo=2.1.5.1-r3 \
-      libexif=0.6.24-r1 \
       giflib=5.2.1-r4 \
-      librsvg=2.56.3-r0 \
+      glib=2.76.4-r0 \
       lcms2=2.15-r2 \
-      libpng=1.6.39-r3 \
-      orc=0.4.34-r0 \
-      libwebp=1.3.2-r0 \
-      libimagequant=4.2.0-r0 \
+      libde265=1.0.12-r0 \
+      libexif=0.6.24-r1 \
+      libgsf=1.14.50-r1 \
       libheif=1.16.2-r0 \
-      libde265=1.0.12-r0
-
-ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
+      libimagequant=4.2.0-r0 \
+      libjpeg-turbo=2.1.5.1-r3 \
+      libpng=1.6.39-r3 \
+      librsvg=2.56.3-r0 \
+      libwebp=1.3.2-r0 \
+      openssl=3.1.4-r2 \
+      orc=0.4.34-r0 \
+      tiff=4.5.1-r0
 
 COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
 
+# Running as root is dangerous as it can lead to several unexpected side effects
 USER nobody
-
 CMD ["dali"]
