@@ -1,16 +1,31 @@
 name: pull-request-tests
 
 on:
-  pull_request:
-    branches:
-      - master
   push:
     branches:
       - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/dali
+  CARGO_INCREMENTAL: 0
+  CARGO_NET_RETRY: 10
+  CI: 1
+  RUST_BACKTRACE: short
+  RUSTUP_MAX_RETRIES: 10
+  # RUSTFLAGS_EXTRA: "-D warnings -W rust-2021-compatibility"
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: rust:1.74.0-alpine3.17
+    container: rust:1.74.0-alpine3.18
     services:
       backend:
         image: nginx:latest
@@ -32,7 +47,19 @@ jobs:
           tar
       - name: Check if nginx is available for files hosting
         run:  curl http://backend/exif --output /dev/null
-      - uses: Swatinem/rust-cache@v2
+      # Cache needs the Cargo.lock file for the cache key and must come after the git checkout
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
       - name: Build Dali
         run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
       - name: Run Dali
@@ -40,6 +67,63 @@ jobs:
       - name: Check if Dali is running
         run:  sleep 5 &&  nc -z localhost 8080
       - name: Run tests
-        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test
-      - name: Exit with the test result
-        run:  exit $?
+        run: |
+          set +e
+          RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test -- --quiet
+          exitcode="$?"
+          echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+          exit "$exitcode"
+
+  # Only runs if a pull request is created
+  # ignored by renovate branch auto-commit strategy, which does not create PRs
+  # renovate creates merge branches and merges on test success
+  # if the tests fail, a PR is raised
+  # Only run if the tests were successful
+  docker-preview:
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: ${{ !contains(needs.test.outputs.status, 'failure') }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to the Container registry
+        if: github.event_name == 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        if: github.event_name == 'pull_request'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: ${{ github.head_ref }}
+
+      - name: Build and push
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Add package image comment to PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        # Inform the user that a preview image has been built and published
+        with:
+          header: pr-docker-image
+          message: |
+            Hey there and thank you for opening this pull request! 👋🏼
+
+            You can pull a preview container image of dali with the below command:
+
+            ```console
+            docker pull ${{ steps.meta.outputs.tags }}
+            ```

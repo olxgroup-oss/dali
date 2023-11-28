@@ -13,7 +13,7 @@
     "labels": [
       "security"
     ],
-    "automerge": true
+    "automerge": false
   },
   "dependencyDashboard": true,
   "configMigration": true,
@@ -43,7 +43,7 @@
         "patch",
         "digest"
       ],
-      "automerge": true,
+      "automerge": false,
       "automergeType": "branch"
     },
     {
