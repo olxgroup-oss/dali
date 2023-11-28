@@ -1,5 +1,4 @@
 // (c) Copyright 2019-2023 OLX
-use utils::make_request;
 
 #[macro_use]
 extern crate lazy_static;
@@ -7,14 +6,14 @@ mod utils;
 
 #[test]
 fn test_get_simple() {
-    let result = make_request(utils::RequestParametersBuilder::new("img-test"))
+    let result = utils::make_request(utils::RequestParametersBuilder::new("img-test"))
         .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.jpg");
 }
 
 #[test]
 fn test_get_rotated() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_rotation(utils::Rotation::R270),
     )
     .expect("Unable to download file");
@@ -24,14 +23,14 @@ fn test_get_rotated() {
 #[test]
 fn test_get_resized() {
     let result =
-        make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
+        utils::make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
             .expect("Unable to download file");
     utils::assert_result(&result[..], "resized.jpg");
 }
 
 #[test]
 fn test_get_watermarked_left() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -47,7 +46,7 @@ fn test_get_watermarked_left() {
 
 #[test]
 fn test_get_watermarked_right() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -63,7 +62,7 @@ fn test_get_watermarked_right() {
 
 #[test]
 fn test_get_watermarked_center() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
             40,
@@ -79,7 +78,7 @@ fn test_get_watermarked_center() {
 
 #[test]
 fn test_get_watermarked_rotated() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -97,7 +96,7 @@ fn test_get_watermarked_rotated() {
 
 #[test]
 fn test_get_encoded_webp() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Webp),
     )
     .expect("Unable to download file");
@@ -106,7 +105,7 @@ fn test_get_encoded_webp() {
 
 #[test]
 fn test_get_encoded_heic() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Heic),
     )
     .expect("Unable to download file");
@@ -115,7 +114,7 @@ fn test_get_encoded_heic() {
 
 #[test]
 fn test_get_encoded_webp_bad_quality() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
             .with_quality(10),
@@ -126,7 +125,7 @@ fn test_get_encoded_webp_bad_quality() {
 
 #[test]
 fn test_get_raw_bad_quality() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Jpeg)
             .with_quality(10),
@@ -137,7 +136,7 @@ fn test_get_raw_bad_quality() {
 
 #[test]
 fn test_get_multiple_watermarks() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -170,7 +169,7 @@ fn test_get_multiple_watermarks() {
 
 #[test]
 fn test_get_watermark_no_alpha() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
                 "watermark",
@@ -189,7 +188,7 @@ fn test_get_watermark_no_alpha() {
 
 #[test]
 fn test_get_exif_watermark() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("exif")
             .add_watermark(
                 "watermark",
@@ -208,7 +207,7 @@ fn test_get_exif_watermark() {
 
 #[test]
 fn test_get_all_features() {
-    let result = make_request(
+    let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
             .with_quality(50)

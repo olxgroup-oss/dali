@@ -1,21 +1,7 @@
 // (c) Copyright 2019-2023 OLX
 #[macro_use]
-#[cfg(all(feature = "hyper_client", feature = "awc_client"))]
+#[cfg(all(feature = "hyper_client", feature = "awc"))]
 compile_error!("features `crate/hyper_client` and `crate/awc` are mutually exclusive");
-
-#[macro_use]
-extern crate cfg_if;
-
-cfg_if! {
-    if #[cfg(feature = "hyper_client")] {
-        use hyper::{Client, client::HttpConnector};
-        use hyper_timeout::TimeoutConnector;
-        type DaliHttpClient = Client<TimeoutConnector<HttpConnector>>;
-    } else {
-        use awc::Client;
-        type DaliHttpClient = Client;
-    }
-}
 
 mod commons;
 mod image_processor;
@@ -23,14 +9,11 @@ mod image_processor;
 use commons::config::Configuration;
 use commons::*;
 
-use actix_web::{
-    body,
-    error::ErrorInternalServerError,
-    web::{self, Data},
-    App, HttpRequest, HttpResponse, HttpServer,
-};
+use actix_http::KeepAlive;
+use actix_service::Service;
+use actix_web::{dev::Body, web, App, HttpRequest, HttpResponse, HttpServer};
 
-use futures::future::{self, join_all};
+use futures::future::join_all;
 use image_processor::*;
 use lazy_static::*;
 use libvips::VipsApp;
@@ -38,7 +21,6 @@ use log::*;
 use prometheus::*;
 use prometheus_static_metric::*;
 use std::{env, iter::once, time::SystemTime};
-use actix_web::dev::Service;
 
 make_static_metric! {
     pub struct HttpRequestDuration: Histogram {
@@ -104,29 +86,13 @@ lazy_static! {
     pub static ref OUTPUT_SIZE: OutputSize = OutputSize::from(&OUTPUT_SIZE_VEC);
 }
 
-async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Result<HttpResponse> {
-    // let query: ProcessImageRequest = match req.app_data::<Data<Config>>()
-    //     .ok_or("Query configuration missing") {
-    //     Ok(query) => query.get_ref().clone().deserialize_str(req.query_string()).map_err(actix_web::error::ErrorBadRequest)?,
-    //     Err(e) => return Err(ErrorInternalServerError(e)),
-    // };
-    let config = match req
-        .app_data::<Data<Configuration>>()
-        .ok_or("Configuration missing")
-    {
-        Ok(config) => config.get_ref(),
-        Err(e) => return Err(ErrorInternalServerError(e)),
-    };
-    let vips_data = req
-        .app_data::<Data<libvips::VipsApp>>()
-        .unwrap()
-        .get_ref()
-        .clone();
-    let http_client = req
-        .app_data::<Data<DaliHttpClient>>()
-        .unwrap()
-        .get_ref()
-        .clone();
+async fn index(
+    req: HttpRequest,
+    query: ProcessImageRequest,
+    http_client: web::Data<http::client::HttpClient>,
+    vips_data: web::Data<VipsApp>,
+    config: web::Data<Configuration>,
+) -> actix_web::Result<HttpResponse> {
     let now = SystemTime::now();
     debug!("Request parameters: {:?}", query);
     let uri = req.uri();
@@ -163,7 +129,7 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
         }
         result
     })
-    .await?
+    .await
     {
         Err(e) => {
             let error_str = format!("{}", e).replace("\"", "\\\"");
@@ -175,10 +141,8 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
                 vips_data.error_buffer().unwrap_or("").replace("\n", ". ")
             );
             let error_response = match e {
-                libvips::error::Error::InitializationError(_) => {
-                    actix_web::error::ErrorBadRequest(e)
-                }
-                _ => actix_web::error::ErrorInternalServerError(e),
+                actix_web::error::BlockingError::Error(libvips::error::Error::InitializationError(_)) => actix_web::error::ErrorBadRequest(e),
+                _ => actix_web::error::ErrorInternalServerError(e)
             };
             Err(error_response)
         }
@@ -191,7 +155,7 @@ async fn index(req: HttpRequest, query: ProcessImageRequest) -> actix_web::Resul
             }
             Ok(HttpResponse::Ok()
                 .content_type(format!("image/{}", format).as_str())
-                .body(body::EitherBody::new(res_body)))
+                .body(Body::from(res_body)))
         }
     }
 }
@@ -206,12 +170,12 @@ async fn metrics() -> HttpResponse {
     match TextEncoder::new().encode(&registry.gather(), &mut buffer) {
         Ok(()) => HttpResponse::Ok()
             .content_type("text/plain")
-            .body(body::EitherBody::new(buffer)),
+            .body(Body::from(buffer)),
         Err(e) => HttpResponse::from_error(actix_web::error::ErrorInternalServerError(e)),
     }
 }
 
-#[actix_web::main]
+#[actix_rt::main]
 async fn main() -> std::io::Result<()> {
     let config = Configuration::new().expect("Failed to load application configuration.");
     println!(r#"{{"configuration": {}}}"#, config);
@@ -284,34 +248,29 @@ async fn main() -> std::io::Result<()> {
     let app_port = config_data.app_port;
     let health_port = config_data.health_port;
 
-    let server_client_timeout = std::time::Duration::new(
-        config_data.server_client_timeout.unwrap_or(5000), 0
-    );
-    let client_shutdown_timeout = std::time::Duration::new(
-        config_data.client_shutdown_timeout.unwrap_or(5000), 0
-    );
-    let server_keep_alive = std::time::Duration::new(
-        config_data.server_keep_alive.unwrap_or(7200) as u64, 0
-    );
+    let client_timeout = config_data.server_client_timeout.unwrap_or(5000);
+    let client_shutdown_timeout = config_data.client_shutdown_timeout.unwrap_or(5000);
+    let server_keep_alive = config_data
+        .server_keep_alive
+        .map(KeepAlive::from)
+        .unwrap_or(KeepAlive::Os);
 
-    let _server_metrics = HttpServer::new(move || {
+    let server_metrics = HttpServer::new(move || {
         App::new()
             .service(web::resource("/metrics").route(web::get().to(metrics)))
             .service(web::resource("/health").route(web::get().to(health)))
     })
     .bind(format!("0.0.0.0:{}", health_port))?
     .workers(metrics_threads)
-    .client_request_timeout(server_client_timeout)
-    .client_disconnect_timeout(client_shutdown_timeout)
+    .client_timeout(client_timeout)
+    .client_shutdown(client_shutdown_timeout)
     .keep_alive(server_keep_alive)
     .run();
 
-    let http_client_con_timeout = std::time::Duration::new(
-        config_data.http_client_con_timeout.unwrap_or(5000), 0
-    );
+    let client_timeout = config_data.http_client_con_timeout.unwrap_or(5000);
 
     #[cfg(feature = "hyper_client")]
-    let http_client: DaliHttpClient = http::client::init_client(http_client_con_timeout)
+    let http_client = http::client::init_client(client_timeout)
         .await
         .expect("Can't initilize http client");
 
@@ -348,14 +307,14 @@ async fn main() -> std::io::Result<()> {
         // one global http client for all threads/workers
         #[cfg(feature = "hyper_client")]
         {
-            app = app.app_data(Data::new(http_client.clone()));
+            app = app.data(http_client.clone());
         }
 
         // one http client per thread/worker
-        #[cfg(feature = "awc_client")]
+        #[cfg(feature = "awc")]
         {
             app = app.data_factory(move || {
-                http::client::init_client(client_timeoutas_secs())
+                http::client::init_client(client_timeout)
             });
         }
 
@@ -364,10 +323,9 @@ async fn main() -> std::io::Result<()> {
     .bind(format!("0.0.0.0:{}", app_port))?
     .workers(app_threads)
     .keep_alive(server_keep_alive)
-    .client_request_timeout(http_client_con_timeout)
-    .client_disconnect_timeout(client_shutdown_timeout)
+    .client_timeout(client_timeout)
+    .client_shutdown(client_shutdown_timeout)
     .run();
 
-    future::try_join(server_main, _server_metrics).await?;
-    Ok(())
+    server_main.await.and(Ok(server_metrics.stop(true).await))
 }
