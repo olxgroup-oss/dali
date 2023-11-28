@@ -1,19 +1,14 @@
 {
-  "branches": [
-    "master"
-  ],
+  "preset": "conventionalcommits",
+  "branches": [ "master" ],
   "ci": false,
   "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/commit-analyzer",
+      "semantic-release-major-tag",
       {
-        "preset": "conventionalcommits"
-      }
-    ],
-    [
-      "@semantic-release/release-notes-generator",
-      {
-        "preset": "conventionalcommits"
+        "customTags": ["v${major}", "v${major}.${minor}"]
       }
     ],
     [
