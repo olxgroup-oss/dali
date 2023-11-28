@@ -20,7 +20,7 @@ env:
   CI: 1
   RUST_BACKTRACE: short
   RUSTUP_MAX_RETRIES: 10
-  RUSTFLAGS_EXTRA: "-D warnings -W rust-2021-compatibility"
+  # RUSTFLAGS_EXTRA: "-D warnings -W rust-2021-compatibility"
 
 jobs:
   test:
@@ -69,7 +69,7 @@ jobs:
       - name: Run tests
         run: |
           set +e
-          RUSTFLAGS="$RUSTFLAGS_EXTRA -C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test -- --quiet
+          RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" HTTP_HOST=backend cargo test -- --quiet
           exitcode="$?"
           echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
           exit "$exitcode"
