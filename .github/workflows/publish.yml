@@ -10,6 +10,7 @@ env:
 
 jobs:
   push_to_registry:
+    if: ! (${{ github.triggering_actor == 'dependabot[bot]' || github.triggering_actor == 'renovate[bot]' }}) && github.repository == 'olxgroup-oss/dali' # prevent running on forks
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
