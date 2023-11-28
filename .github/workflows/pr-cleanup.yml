@@ -13,7 +13,7 @@ jobs:
     name: Delete build artifacts and preview images
     runs-on: ubuntu-latest
     steps:
-      - uses: chipkent/action-cleanup-package@v1.0.1
+      - uses: chipkent/action-cleanup-package@v1.0.3
         with:
           package-name: ${{ github.event.repository.name }}/dali
           tag: ${{ github.head_ref }}
