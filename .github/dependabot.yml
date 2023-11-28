@@ -1,0 +1,34 @@
+# Please see the documentation for all configuration options:
+# https://help.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+        # These are peer deps of Cargo and should not be automatically bumped
+        - dependency-name: "semver"
+        - dependency-name: "crates-io"
+    open-pull-requests-limit: 4
+    rebase-strategy: "disabled"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: "rust"
+    directory: "/"
+    schedule:
+      # infrequent updates as this is a library: security updates shouldn't need
+      # a major version bump, and minor versions can be controlled by users
+      # Cargo.lock as they will be compatible.
+      interval: "monthly"
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: ".github/workflows"
+    schedule:
+      interval: weekly
