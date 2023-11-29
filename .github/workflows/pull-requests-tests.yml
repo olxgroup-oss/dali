@@ -31,6 +31,12 @@ jobs:
         image: nginx:latest
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
+      - name: Debug workflow trigger
+        run:
+             echo "The workflow was triggered by ${{ github.triggering_actor }}"
+             echo -e "The actor is\t${{github.actor}}"
+             echo -e "The actor has id\t${{github.actor_id}}"
+
       - uses: actions/checkout@v4
       - name: Restart nginx
         uses: docker://docker
