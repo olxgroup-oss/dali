@@ -3,6 +3,7 @@
   "branches": [ "master" ],
   "ci": false,
   "plugins": [
+    "conventional-changelog-conventionalcommits",
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
@@ -35,14 +36,6 @@
           "Cargo.lock"
         ],
         "message": "chore: Release ${nextRelease.version} [skip ci]"
-      }
-    ],
-    [
-      "@semantic-release-cargo/semantic-release-cargo",
-      {
-        "verifyConditions": false,
-        "prepare": true,
-        "publish": false
       }
     ]
   ]
