@@ -12,6 +12,12 @@
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "semantic-release-cargo prepare ${nextRelease.version}"
+      }
+    ],
+    [
       "@semantic-release/github",
       {
         "successComment": "This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} :tada:",
@@ -25,7 +31,8 @@
       {
         "assets": [
           "CHANGELOG.md",
-          "Cargo.toml"
+          "Cargo.toml",
+          "Cargo.lock"
         ],
         "message": "chore: Release ${nextRelease.version} [skip ci]"
       }

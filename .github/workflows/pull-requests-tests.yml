@@ -31,6 +31,12 @@ jobs:
         image: nginx:latest
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
+      - name: Debug workflow trigger
+        run:
+             echo "The workflow was triggered by ${{ github.triggering_actor }}"
+             echo -e "The actor is\t${{github.actor}}"
+             echo -e "The actor has id\t${{github.actor_id}}"
+
       - uses: actions/checkout@v4
       - name: Restart nginx
         uses: docker://docker
@@ -81,8 +87,9 @@ jobs:
   # Only run if the tests were successful
   docker-preview:
     runs-on: ubuntu-latest
-    needs: [test]
-    if: ${{ !contains(needs.test.outputs.status, 'failure') }}
+    needs:
+      - test
+    if: ${{ !contains(needs.test.outputs.status, 'failure') }} && ${{!(github.triggering_actor == 'dependabot[bot]' || github.triggering_actor == 'renovate[bot]') && github.repository == 'olxgroup-oss/dali'}}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Docker Buildx

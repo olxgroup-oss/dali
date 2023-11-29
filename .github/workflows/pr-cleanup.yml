@@ -1,6 +1,4 @@
-# Delete Docker images after PR merge
-#
-
+# Delete Docker images, caches and artifacts after PR merge
 name: 'Clean Up PR'
 
 on:
@@ -9,21 +7,31 @@ on:
   workflow_dispatch:
 
 jobs:
-  purge:
+  purge-docker:
     name: Delete build artifacts and preview images
+    strategy:
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
-      - uses: chipkent/action-cleanup-package@v1.0.1
+      - uses: chipkent/action-cleanup-package@v1.0.3
         with:
           package-name: ${{ github.event.repository.name }}/dali
           tag: ${{ github.head_ref }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+  purge-artifacts:
+    name: Delete build artifacts and preview images
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
       - uses: stefanluptak/delete-old-pr-artifacts@v1
         with:
           workflow_filename: pull-requests-tests.yml
           debug: true
   cleanup:
     name: Clean up branch caches
+    strategy:
+      fail-fast: false
     runs-on: ubuntu-latest
     permissions:
       # `actions:write` permission is required to delete caches
