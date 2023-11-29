@@ -1,9 +1,7 @@
 {
-  "preset": "conventionalcommits",
   "branches": [ "master" ],
   "ci": false,
   "plugins": [
-    "conventional-changelog-conventionalcommits",
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
