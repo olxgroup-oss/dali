@@ -11,6 +11,12 @@
       }
     ],
     [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
       "@semantic-release/exec",
       {
         "prepareCmd": "semantic-release-cargo prepare ${nextRelease.version}"
