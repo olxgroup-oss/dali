@@ -28,9 +28,6 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     name: Publish Images
-    if: needs.get-next-version.outputs.new-release-published == 'true'
-    needs:
-      - get-next-version
     steps:
       - uses: actions/checkout@v4
         with:
