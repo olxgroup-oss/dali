@@ -32,10 +32,10 @@ jobs:
         options: -v ${{ github.workspace }}/tests/resources/:/usr/share/nginx/html/ --name backend
     steps:
       - name: Debug workflow trigger
-        run:
-             echo "The workflow was triggered by ${{ github.triggering_actor }}"
-             echo -e "The actor is\t${{github.actor}}"
-             echo -e "The actor has id\t${{github.actor_id}}"
+        run: |
+          echo "The workflow was triggered by ${{ github.triggering_actor }}"
+          echo -e "The actor is\t${{github.actor}}"
+          echo -e "The actor has id\t${{github.actor_id}}"
 
       - uses: actions/checkout@v4
       - name: Restart nginx
@@ -43,7 +43,7 @@ jobs:
         with:
           args: docker restart backend
       - name: Install build dependencies
-        run:  apk add --update --no-cache
+        run: apk add --update --no-cache
           --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/community
           --repository https://dl-cdn.alpinelinux.org/alpine/v3.17/main
           curl
@@ -52,7 +52,7 @@ jobs:
           vips-heif=8.13.3-r1
           tar
       - name: Check if nginx is available for files hosting
-        run:  curl http://backend/exif --output /dev/null
+        run: curl http://backend/exif --output /dev/null
       # Cache needs the Cargo.lock file for the cache key and must come after the git checkout
       - name: Set up cargo cache
         uses: actions/cache@v3
@@ -67,11 +67,11 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - name: Build Dali
-        run:  RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
+        run: RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build
       - name: Run Dali
-        run:  ./target/debug/dali >> /dev/null &
+        run: ./target/debug/dali >> /dev/null &
       - name: Check if Dali is running
-        run:  sleep 5 &&  nc -z localhost 8080
+        run: sleep 5 &&  nc -z localhost 8080
       - name: Run tests
         run: |
           set +e
@@ -103,7 +103,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Docker metadata
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.repository == 'olxgroup-oss/dali'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -111,7 +111,7 @@ jobs:
           tags: ${{ github.head_ref }}
 
       - name: Build and push
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.repository == 'olxgroup-oss/dali'
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -121,7 +121,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Add package image comment to PR
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.repository == 'olxgroup-oss/dali'
         uses: marocchino/sticky-pull-request-comment@v2
         # Inform the user that a preview image has been built and published
         with:

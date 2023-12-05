@@ -1,6 +1,8 @@
+# (c) Copyright 2019-2023 OLX
+
 on:
   pull_request:
-    types: [ opened, edited ]
+    types: [opened, edited]
 name: conventional-release-labels
 jobs:
   label:

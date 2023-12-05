@@ -1,5 +1,5 @@
 {
-  "branches": [ "master" ],
+  "branches": ["master"],
   "ci": false,
   "plugins": [
     "@semantic-release/commit-analyzer",
@@ -34,12 +34,8 @@
     [
       "@semantic-release/git",
       {
-        "assets": [
-          "CHANGELOG.md",
-          "Cargo.toml",
-          "Cargo.lock"
-        ],
-        "message": "chore: Release ${nextRelease.version} [skip ci]"
+        "assets": ["CHANGELOG.md", "Cargo.toml", "Cargo.lock"],
+        "message": "chore: v${nextRelease.version} released"
       }
     ]
   ]
