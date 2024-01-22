@@ -55,7 +55,7 @@ jobs:
         run: curl http://backend/exif --output /dev/null
       # Cache needs the Cargo.lock file for the cache key and must come after the git checkout
       - name: Set up cargo cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         continue-on-error: false
         with:
           path: |
