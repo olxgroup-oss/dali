@@ -1,3 +1,17 @@
+# [2.0.0](https://github.com/olxgroup-oss/dali/compare/v1.6.0...v2.0.0) (2024-02-15)
+
+
+### Features
+
+* **s3:** add S3 support ([#89](https://github.com/olxgroup-oss/dali/issues/89)) ([5e514a7](https://github.com/olxgroup-oss/dali/commit/5e514a744662929d1f5c4daae7609f9e2bdedf8c))
+
+
+### BREAKING CHANGES
+
+* **s3:** replaced actix with axum
+
+Co-authored-by: bogdan.vidrean <bogdan.vidrean@olx.com>
+
 # [1.6.0](https://github.com/olxgroup-oss/dali/compare/v1.5.0...v1.6.0) (2023-12-05)
 
 
