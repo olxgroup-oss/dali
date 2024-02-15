@@ -1,16 +1,13 @@
-// (c) Copyright 2019-2023 OLX
+// (c) Copyright 2019-2024 OLX
 
-pub mod actix_utils;
 pub mod config;
 pub mod errors;
-pub mod http;
 
 use errors::InvalidSizeError;
 use libvips::ops::Angle;
 use log::*;
-use serde_derive::*;
+use serde::Deserialize;
 use std::fmt;
-
 
 pub fn timestamp_millis() -> u128 {
     std::time::SystemTime::now()

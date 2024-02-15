@@ -20,17 +20,16 @@ All configuration should be provided through either a json config file or enviro
 | `log_level` | Enum(trace, debug, info, warn, error) | Logging level for the application | N | <ul><li>`error`</li><li>`warn`</li><li>`info`</li><li>`debug`</li><li>`trace`</li></ul> | Default value is `info`. |
 | `app_port` | integer | Port which the web server listens to for requests  | Y | - | |
 | `health_port` | integer | Port which the web server listens to for the health requests  | Y | - | |
-| `server_client_timeout` | integer | Defines a timeout for reading client request header. If a client does not transmit the entire set headers within this time, the request is terminated with the 408 (Request Time-out) error. | N | - | - |
-| `client_shutdown_timeout` | integer | Defines a timeout for shutdown connection. If a shutdown procedure does not complete within this time, the request is dropped. | N | - | - |
-| `server_keep_alive` | integer | Server keep alive value | N | - | If not specified, it will use the OS's configuration |
-| `http_client_con_timeout` | integer | Set the timeout for connecting to a URL | N | - | Default is no timeout |
-| `http_client_read_timeout` | integer | Set the timeout for the response | N | - | Default is no timeout |
-| `http_client_write_timeout` | integer | Set the timeout for the request | N | - | Default is no timeout |
-| `http_client_max_size_of_payload` | integer | Max size of response payload (for `awc` feature only) | N | - | Default is 256Kb |
-| `max_threads` | integer | Max number of threads the application will spawn for serving requests and processing images | N | - | If not specified it will take the number of physical CPUs from the machine |
-| `vips_threads` | integer | Max number of threads for image processing that will be used | N | - | if not specified it will take `max_threads/2` with a minimum of 1 |
-| `app_threads` | integer | Max number of threads for serving requests that will be used | N | - | if not specified it will take `max_threads/2` with a minimum of 1 |
-| `metrics_threads` | integer | Max number of threads for serving the `health` and `metrics` endpoints | N | - | Defaults to 1 |
+| `vips_threads` | integer | Max number of threads for image processing that will be used | N | - | if not specified it will take `num_of_cpus/2` with a minimum of 1 |
+| `reqwest_timeout_millis` | integer | Only applicable when running Dali with the `reqwest` feature which implies that the images that have to be processed are stored behind an http server and will be download with a Reqwest client. Enables a request timeout for the Reqwest client. The timeout is applied from when the request starts connecting until the response body has finished. | N (only in `reqwest` mode) | - | if not specified, the default is `2000` milliseconds |
+| `reqwest_connection_timeout_millis` | integer | Only applicable when running Dali with the `reqwest` feature which implies that the images that have to be processed are stored behind an http server and will be downloaded with a Reqwest http client. Set a timeout for only the connect phase of a Client. | N (only in `reqwest` mode) | - | if not specified, the default is `2000` milliseconds |
+| `reqwest_pool_max_idle_per_host` | integer | Only applicable when running Dali with the `reqwest` feature which implies that the images that have to be processed are stored behind an http server and will be downloaded with a Reqwest http client. Sets the maximum idle connection per host allowed in the pool. | N (only in `reqwest` mode) | - | if not specified, the default is `10` connections |
+| `reqwest_pool_idle_timeout_millis` | integer | Only applicable when running Dali with the `reqwest` feature which implies that the images that have to be processed are stored behind an http server and will be downloaded with a Reqwest http client. Set an optional timeout for idle sockets being kept-alive. | N (only in `reqwest` mode) | - | if not specified, the default is `60000` milliseconds |
+| `s3_region` | String | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. The region where the bucket resides. | Y (only in S3 mode) | - | if not provided, Dali panics while trying to instantiate the S3 client |
+| `s3_key` | String | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. The key of an AWS IAM user configured for programatic access to download the images from S3. | N (only in S3 mode) | - | if not provided together with the `s3_secret`, the S3 client tries to instantiate the S3 client based on the enviroment variables |
+| `s3_secret` | String | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. The secret of an AWS IAM user configured for programatic access to download the images from S3. | N (only in S3 mode) | - | if not provided together with the `s3_key`, the S3 client tries to instantiate the S3 client based on the enviroment variables |
+| `s3_endpoint` | String | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. This configuration property is only needed for the local dev environment where MinIO is used to emulate S3. | N (only in S3 mode) | - | it's only needed when wanting to use MinIO for the local development environment. has to be ommited when using Dali in production with the real S3 |
+| `s3_bucket` | String | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. The name of the S3 bucket from where Dali will download the images that need processing. | Y (only in S3 mode) | - | if not provided Dali panics while trying to instantiate the S3 client |
 
 The application will compute the number of threads by the following formula: `pod_number_of_cpus * cpu_usage_percentage / 100`. This number will be divided by 2 and half will be assigned to the HTTP connection listener and half will be assigned to `libvips` (the image library). An extra worker will be created to listen to the `health` endpoint (this was done to be sure the application won't block the `health` endpoint even when overloaded).
 
@@ -59,6 +58,13 @@ _if it fails to compile because of the linker, try to add the result of `pkg-con
 Alternatively, it is possible to run both components inside docker (once you build them):
 
 ```make up```
+
+### Local development environment
+
+- `dev-env.start` locally starts a MinIO server inside a docker container. This server acts as both an HTTP server and an S3 emulator. This is achieved by having two buckets that both contain the same `test-image.jpeg` file:
+1. `dali-public` which is publicly avaialble hence the image can be fetched over http using the following url: `http://localhost:2969/dali-public/test-image.jpeg`
+2. `dali-private` which can only be accesed by the dummy credentials present within the `default.json` config file.
+- `dev-env.stop` stops the MinIO server that runs locally.
 
 ## Testing
 
@@ -134,4 +140,4 @@ Watermarks is an array parameter and therefore, must be indexed when informed (0
 
 ## License
 
-(c) Copyright 2019-2023 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
+(c) Copyright 2019-2024 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)

@@ -1,4 +1,4 @@
-# (c) Copyright 2019-2023 OLX
+# (c) Copyright 2019-2024 OLX
 
 # This workflow is triggered when semantic-release
 # cretes a new tag in the repository.
@@ -40,8 +40,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Docker meta
-        id: meta
+      - name: Docker meta for the Dali image with the reqwest feature
+        id: meta-reqwest
         uses: docker/metadata-action@v5
         with:
           flavor: latest=true
@@ -54,11 +54,36 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
 
-      - name: Build and push
+      - name: Build and push with the reqwest feature
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
+          build-args: DALI_FEATURES=reqwest
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-reqwest.outputs.tags }}
+          labels: ${{ steps.meta-reqwest.outputs.labels }}
+
+      - name: Docker meta for the Dali image with the s3 feature
+        id: meta-s3
+        uses: docker/metadata-action@v5
+        with:
+          flavor: latest=true
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-s3
+          tags: |
+            # set latest tag for default branch
+            type=raw,value=latest,enable=false
+            type=raw,value=master,enable=false
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+
+      - name: Build and push with the s3 feature
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: DALI_FEATURES=s3
+          push: true
+          tags: ${{ steps.meta-s3.outputs.tags }}
+          labels: ${{ steps.meta-s3.outputs.labels }}

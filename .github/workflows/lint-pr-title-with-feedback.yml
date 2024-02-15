@@ -1,4 +1,4 @@
-# (c) Copyright 2019-2023 OLX
+# (c) Copyright 2019-2024 OLX
 
 # Attribution: https://github.com/amannn/action-semantic-pull-request/blob/v5.3.0/.github/workflows/lint-pr-title-preview-outputErrorMessage.yml
 name: "Lint PR title preview with feedback"
