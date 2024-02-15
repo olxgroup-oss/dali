@@ -1,35 +1,38 @@
-// (c) Copyright 2019-2023 OLX
+// (c) Copyright 2019-2024 OLX
 
 #[macro_use]
 extern crate lazy_static;
 mod utils;
 
-#[test]
-fn test_get_simple() {
+#[tokio::test]
+async fn test_get_simple() {
     let result = utils::make_request(utils::RequestParametersBuilder::new("img-test"))
+        .await
         .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.jpg");
 }
 
-#[test]
-fn test_get_rotated() {
+#[tokio::test]
+async fn test_get_rotated() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_rotation(utils::Rotation::R270),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw_rotated.jpg");
 }
 
-#[test]
-fn test_get_resized() {
+#[tokio::test]
+async fn test_get_resized() {
     let result =
         utils::make_request(utils::RequestParametersBuilder::new("img-test").with_size(100, 100))
+            .await
             .expect("Unable to download file");
     utils::assert_result(&result[..], "resized.jpg");
 }
 
-#[test]
-fn test_get_watermarked_left() {
+#[tokio::test]
+async fn test_get_watermarked_left() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
@@ -40,12 +43,13 @@ fn test_get_watermarked_left() {
             utils::WatermarkPosition::Point,
         ),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "watermarked_left.jpg");
 }
 
-#[test]
-fn test_get_watermarked_right() {
+#[tokio::test]
+async fn test_get_watermarked_right() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
@@ -56,12 +60,13 @@ fn test_get_watermarked_right() {
             utils::WatermarkPosition::Point,
         ),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "watermarked_right.jpg");
 }
 
-#[test]
-fn test_get_watermarked_center() {
+#[tokio::test]
+async fn test_get_watermarked_center() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").add_watermark(
             "watermark",
@@ -72,12 +77,13 @@ fn test_get_watermarked_center() {
             utils::WatermarkPosition::Center,
         ),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "watermarked_center.jpg");
 }
 
-#[test]
-fn test_get_watermarked_rotated() {
+#[tokio::test]
+async fn test_get_watermarked_rotated() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
@@ -90,52 +96,57 @@ fn test_get_watermarked_rotated() {
             )
             .with_rotation(utils::Rotation::R90),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "rotated_watermarked.jpg");
 }
 
-#[test]
-fn test_get_encoded_webp() {
+#[tokio::test]
+async fn test_get_encoded_webp() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Webp),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.webp");
 }
 
-#[test]
-fn test_get_encoded_heic() {
+#[tokio::test]
+async fn test_get_encoded_heic() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test").with_format(utils::ImageFormat::Heic),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw.heic");
 }
 
-#[test]
-fn test_get_encoded_webp_bad_quality() {
+#[tokio::test]
+async fn test_get_encoded_webp_bad_quality() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
             .with_quality(10),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw_bad_quality.webp");
 }
 
-#[test]
-fn test_get_raw_bad_quality() {
+#[tokio::test]
+async fn test_get_raw_bad_quality() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Jpeg)
             .with_quality(10),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "raw_bad_quality.jpg");
 }
 
-#[test]
-fn test_get_multiple_watermarks() {
+#[tokio::test]
+async fn test_get_multiple_watermarks() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
@@ -163,12 +174,13 @@ fn test_get_multiple_watermarks() {
                 utils::WatermarkPosition::Point,
             ),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "multiple_watermarks.jpg");
 }
 
-#[test]
-fn test_get_watermark_no_alpha() {
+#[tokio::test]
+async fn test_get_watermark_no_alpha() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .add_watermark(
@@ -182,12 +194,13 @@ fn test_get_watermark_no_alpha() {
             .add_watermark("lena", 20, 0.3f64, 10, 10, utils::WatermarkPosition::Center)
             .add_watermark("lena", 20, 0.3f64, 10, 10, utils::WatermarkPosition::Point),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "watermarks_no_alpha.jpg");
 }
 
-#[test]
-fn test_get_exif_watermark() {
+#[tokio::test]
+async fn test_get_exif_watermark() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("exif")
             .add_watermark(
@@ -201,12 +214,13 @@ fn test_get_exif_watermark() {
             .add_watermark("lena", 20, 0.3f64, 10, 10, utils::WatermarkPosition::Center)
             .add_watermark("exif", 20, 0.3f64, 10, 10, utils::WatermarkPosition::Point),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "exif_watermark.jpg");
 }
 
-#[test]
-fn test_get_all_features() {
+#[tokio::test]
+async fn test_get_all_features() {
     let result = utils::make_request(
         utils::RequestParametersBuilder::new("img-test")
             .with_format(utils::ImageFormat::Webp)
@@ -230,6 +244,7 @@ fn test_get_all_features() {
             )
             .with_size(150, 150),
     )
+    .await
     .expect("Unable to download file");
     utils::assert_result(&result[..], "all_features.webp");
 }

@@ -1,4 +1,4 @@
-# (c) Copyright 2019-2023 OLX
+# (c) Copyright 2019-2024 OLX
 # We are manually installing and configuring libvips and each required package because previously when trying to use
 # the community built bundles (i.e. vips and vips-heif) the performace of Dali has been significantly degraded.
 FROM rust:1.74.0-alpine3.18 as build
@@ -8,9 +8,9 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     build-base=0.5-r3 \
     clang=16.0.6-r1 \
     clang16-libclang=16.0.6-r1 \
-    expat-dev=2.5.0-r1 \
+    expat-dev=2.6.0-r0 \
     giflib-dev=5.2.1-r4 \
-    glib-dev=2.76.4-r0 \
+    glib-dev=2.76.6-r0 \
     lcms2-dev=2.15-r2 \
     libexif-dev=0.6.24-r1 \
     libheif-dev=1.16.2-r0 \
@@ -19,7 +19,7 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     libpng-dev=1.6.39-r3 \
     librsvg-dev=2.56.3-r0 \
     libwebp-dev=1.3.2-r0 \
-    openssl-dev=3.1.4-r1 \
+    openssl-dev=3.1.4-r5 \
     orc-dev=0.4.34-r0 \
     pkgconf=1.9.5-r0 \
     tiff-dev=4.5.1-r0
@@ -35,7 +35,8 @@ RUN wget https://github.com/libvips/libvips/releases/download/v8.13.3/vips-8.13.
 
 COPY . .
 
-RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --release
+ARG DALI_FEATURES=reqwest
+RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --features ${DALI_FEATURES} --release
 
 FROM alpine:3.18.4
 ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
@@ -50,11 +51,11 @@ COPY --from=build /usr/local/lib /usr/local/lib
 RUN apk add --update --no-cache  \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/main  \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/community \
-      expat=2.5.0-r1 \
+      expat=2.6.0-r0 \
       giflib=5.2.1-r4 \
-      glib=2.76.4-r0 \
+      glib=2.76.6-r0 \
       lcms2=2.15-r2 \
-      libde265=1.0.12-r0 \
+      libde265=1.0.15-r0 \
       libexif=0.6.24-r1 \
       libgsf=1.14.50-r1 \
       libheif=1.16.2-r0 \
@@ -63,7 +64,7 @@ RUN apk add --update --no-cache  \
       libpng=1.6.39-r3 \
       librsvg=2.56.3-r0 \
       libwebp=1.3.2-r0 \
-      openssl=3.1.4-r1 \
+      openssl=3.1.4-r5 \
       orc=0.4.34-r0 \
       tiff=4.5.1-r0
 

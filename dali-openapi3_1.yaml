@@ -1,0 +1,101 @@
+openapi: 3.1.0
+info:
+  title: Dali - OpenAPI 3.1
+  description: |-
+    Dali (named after the great painter Salvador Dali) is a service which performs image transformations. The application supports:
+
+    Retrieving source images from either an HTTP URL or an S3 bucket.
+    Encoding images to PNG, JPEG, WEBP or HEIC
+    Resizing an image
+    Rotating an image
+    Apply a watermark image to an image
+
+    Some useful links:
+    - [Dali repository](https://github.com/olxgroup-oss/dali/)
+
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: application server
+  - url: http://localhost:8081
+    description: metrics server
+tags:
+  - name: Metrics
+    description: Prometheus metrics
+  - name: Image
+    description: Fetches an image from either an HTTP server or an S3 bucket
+paths:
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Fetch Prometheus metrics
+      description: Fetch server metrics in the format supported by Prometheus
+      responses:
+        '200':
+          description: Successful operation
+  /:
+    get:
+      tags:
+        - Image
+      summary: Fetch image from an HTTP server or S3 bucket
+      description: Fetches an image hosted behind either an HTTP server or an S3 bucket in order to process it
+      parameters:
+        - name: image_address
+          in: query
+          description: The HTTP url where the testing image resides or the key of the image inside the S3 bucket
+          required: true
+          schema:
+            type: string
+            default: http://localhost:2969/dali-public/test-image.jpeg
+            explode: true
+            enum:
+              - "http://localhost:2969/dali-public/test-image.jpeg"
+              - "test-image.jpeg"
+        - name: rotation
+          in: query
+          description: The applied rotation to the processed image
+          required: true
+          schema:
+            type: string
+            default: R90
+        - name: quality
+          in: query
+          description: The quality of the processed image
+          required: true
+          schema:
+            type: string
+            default: 70
+        - name: f
+          in: query
+          description: The desired format of the processed image
+          required: true
+          schema:
+            type: string
+            default: png
+        - name: size[width]
+          in: query
+          description: The desired width of the processed image
+          required: true
+          schema:
+            type: string
+            default: 256
+        - name: size[height]
+          in: query
+          description: The desired height of the processed image
+          required: true
+          schema:
+            type: string
+            default: 256
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid URL provided
+        '404':
+          description: The file coouldn't be found at the provided URL
+        '500':
+          description: Something went wrong

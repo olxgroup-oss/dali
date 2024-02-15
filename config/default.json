@@ -2,10 +2,13 @@
   "app_port": 8080,
   "health_port": 8081,
   "log_level": "info",
-  "server_client_timeout": 1000,
-  "client_shutdown_timeout": 1000,
-  "server_keep_alive": 1000,
-  "http_client_con_timeout": 1000,
-  "http_client_read_timeout": 1000,
-  "http_client_write_timeout": 1000
+  "reqwest_timeout_millis": 2000,
+  "reqwest_connection_timeout_millis": 2000,
+  "reqwest_pool_max_idle_per_host": 20,
+  "reqwest_pool_idle_timeout_millis": 90,
+  "s3_region": "eu-west-1",
+  "s3_key": "root",
+  "s3_secret": "rootpassword",
+  "s3_endpoint": "http://localhost:2969/",
+  "s3_bucket": "dali-private"
 }

@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2023 OLX
+// (c) Copyright 2019-2024 OLX
 
 use crate::commons::*;
 use libvips::ops;
@@ -7,10 +7,9 @@ use libvips::VipsImage;
 use log::*;
 
 pub fn process_image(
-    buffer: &actix_web::web::Bytes,
-    wm_buffers: &[actix_web::web::Bytes],
+    buffer: Vec<u8>,
+    wm_buffers: Vec<Vec<u8>>,
     parameters: ProcessImageRequest,
-    input_size: &mut u32,
 ) -> Result<Vec<u8>> {
     let ProcessImageRequest {
         image_address: _addr,
@@ -35,7 +34,6 @@ pub fn process_image(
     } else {
         ""
     };
-    *input_size = buffer.len() as u32;
     let source = VipsImage::new_from_buffer(&buffer[..], options)?;
 
     let mut final_image = if needs_rotation {
@@ -55,7 +53,6 @@ pub fn process_image(
     let image_height = final_image.get_height();
 
     for (i, wm_buffer) in wm_buffers.iter().enumerate() {
-        *input_size += wm_buffer.len() as u32;
         let watermark = &watermarks[i];
         debug!("Applying watermark: {:?}", watermark);
         let wm =

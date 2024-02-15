@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2023 OLX
+// (c) Copyright 2019-2024 OLX
 
 use crate::commons::Size;
 use std::convert::From;
