@@ -38,7 +38,7 @@ COPY . .
 ARG DALI_FEATURES=reqwest
 RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --features ${DALI_FEATURES} --release
 
-FROM alpine:3.18.4
+FROM alpine:3.19.1
 ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
 
 # With the next command, the libvips bianries are copied from the previous stage hence we don't have to install it again.
