@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2024 OLX
 # We are manually installing and configuring libvips and each required package because previously when trying to use
 # the community built bundles (i.e. vips and vips-heif) the performace of Dali has been significantly degraded.
-FROM rust:1.74.0-alpine3.18 as build
+FROM rust:1.77.0-alpine3.18 as build
 
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/main \
