@@ -7,8 +7,8 @@
   "reqwest_pool_max_idle_per_host": 20,
   "reqwest_pool_idle_timeout_millis": 90,
   "s3_region": "eu-west-1",
-  "s3_key": "aws_s3_key",
-  "s3_secret": "aws_s3_secret",
+  "s3_key": "root",
+  "s3_secret": "rootpassword",
   "s3_endpoint": "http://localhost:2969/",
   "s3_bucket": "dali-private"
 }
