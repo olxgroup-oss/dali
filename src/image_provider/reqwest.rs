@@ -11,7 +11,7 @@ pub mod client {
         ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
         InvalidResourceUriProvided,
     };
-    use crate::image_provider::ImageProvider;
+    use crate::image_provider::{ImageProvider, ImageResponse};
     use crate::routes::image::ImageProcessingError;
 
     pub struct ReqwestImageProvider {
@@ -49,7 +49,7 @@ pub mod client {
 
     #[async_trait]
     impl ImageProvider for ReqwestImageProvider {
-        async fn get_file(&self, resource: &str) -> Result<Vec<u8>, ImageProcessingError> {
+        async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError> {
             let url = Url::parse(resource).map_err(|_| {
                 error!(
                     "the provided resource uri is not a valid http url: '{}'",
@@ -69,8 +69,18 @@ pub mod client {
                     ImageDownloadFailed
                 }
             })?;
-
+            
             let status = response.status();
+            let headers = response
+                .headers()
+                .into_iter()
+                .map(|header| {
+                    (
+                        String::from(header.0.as_str()),
+                        header.1.as_bytes().to_vec(),
+                    )
+                })
+                .collect();
             if status.is_success() {
                 let bytes = response.bytes().await.map_err(|e| {
                     error!(
@@ -79,7 +89,10 @@ pub mod client {
                     );
                     ImageDownloadFailed
                 })?;
-                Ok(bytes.to_vec())
+                Ok(ImageResponse {
+                    bytes: bytes.to_vec(),
+                    response_headers: headers,
+                })
             } else if status.is_client_error() {
                 error!(
                     "the requested image '{}' couldn't be downloaded. received status code: {}",

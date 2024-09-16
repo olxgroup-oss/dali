@@ -5,6 +5,7 @@ use axum::{
     http::{Response, StatusCode},
     response::IntoResponse,
 };
+use core::str;
 use futures::future::join_all;
 use log::{error, warn};
 use serde::de::DeserializeOwned;
@@ -18,6 +19,12 @@ use crate::{
 };
 
 use super::metric::{FETCH_DURATION, INPUT_SIZE, OUTPUT_SIZE};
+
+// The following response headers are determined by Dali as it formats the image dowloaded from the provided source.
+// Thus the length and type of the resulted image might be different compared to what the storage engine has returned.
+// To match different variations regarding the case (lower/upper) they're specified in lowercase here and we convert
+// to lower the other ones that we compare with.
+const HEADERS_DETERMINED_BY_DALI: [&str; 2] = ["content-type", "content-length"];
 
 pub struct ProcessImageRequestExtractor<T>(pub T);
 
@@ -113,7 +120,7 @@ pub async fn process_image(
 ) -> Result<Response<Body>, ImageProcessingError> {
     let now = SystemTime::now();
     let main_img = image_provider.get_file(&params.image_address).await?;
-    let mut total_input_size = main_img.len();
+    let mut total_input_size = main_img.bytes.len();
 
     let watermarks_futures = params
         .watermarks
@@ -133,8 +140,8 @@ pub async fn process_image(
         })
         .map(|r| {
             let watermark = r.unwrap();
-            total_input_size += watermark.len();
-            watermark
+            total_input_size += watermark.bytes.len();
+            watermark.bytes
         })
         .collect();
 
@@ -151,7 +158,7 @@ pub async fn process_image(
     // response time and memory used
     let (send, recv) = tokio::sync::oneshot::channel();
     rayon::spawn(move || {
-        let image = image_processor::process_image(main_img, watermarks, params);
+        let image = image_processor::process_image(main_img.bytes, watermarks, params);
         let _ = send.send(image);
     });
     let processed_image = recv.await.map_err(|e| {
@@ -170,8 +177,13 @@ pub async fn process_image(
     })?;
 
     log_size_metrics(&format, total_input_size, processed_image.len());
-    Ok(Response::builder()
-        .status(StatusCode::OK)
+    let mut response_builder = Response::builder().status(StatusCode::OK);
+    for (key, value) in main_img.response_headers.into_iter() {
+        if !HEADERS_DETERMINED_BY_DALI.contains(&key.to_lowercase().as_str()) {
+            response_builder = response_builder.header(key, value);
+        }
+    }
+    Ok(response_builder
         .header("Content-Type", format!("image/{}", format))
         .body(Body::from(processed_image))
         .unwrap())

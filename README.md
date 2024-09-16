@@ -40,13 +40,13 @@ The application will compute the number of threads by the following formula: `po
 * Libvips
 * A HTTP server for images
 * Docker
-* Rust
+* Rust (1.74.0)
 
 This application relies on C libvips library. That means it has to be previously installed into the system before compiling and/or running.
 
 For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.10.1)
 
-Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup update`.
+Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup install 1.74.0`.
 
 To build and run the application, run the following command:
 

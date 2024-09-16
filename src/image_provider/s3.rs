@@ -5,6 +5,7 @@ pub mod s3 {
     use aws_sdk_s3::error::SdkError;
     use axum::http::StatusCode;
     use log::error;
+    use std::collections::HashMap;
     use std::io::Write;
     use thiserror::Error;
 
@@ -13,6 +14,7 @@ pub mod s3 {
     use aws_sdk_s3::error::ProvideErrorMetadata;
 
     use crate::commons::config::Configuration;
+    use crate::image_provider::ImageResponse;
     use crate::image_provider::{
         ImageProcessingError::{
             self, ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
@@ -78,7 +80,7 @@ pub mod s3 {
 
     #[async_trait]
     impl ImageProvider for S3ImageProvider {
-        async fn get_file(&self, resource: &str) -> Result<Vec<u8>, ImageProcessingError> {
+        async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError> {
             if String::from(resource).is_empty() {
                 error!("the provided resource uri is empty");
                 return Err(InvalidResourceUriProvided(String::new()));
@@ -129,6 +131,20 @@ pub mod s3 {
                     }
                 })?;
 
+            let headers = match result.metadata() {
+                None => HashMap::new(),
+                Some(metadata) => metadata
+                    .into_iter()
+                    .map(|(key, value)| {
+                        let mut response_header_key = String::from("x-amz-meta-");
+                        response_header_key.push_str(key);
+                        (
+                            response_header_key,
+                            value.as_bytes().to_vec(),
+                        )
+                    })
+                    .collect(),
+            };
             let mut binary_payload: Vec<u8> = Vec::new();
             while let Some(bytes) = result.body.try_next().await.map_err(|e| {
                 error!(
@@ -146,7 +162,10 @@ pub mod s3 {
                 })?;
             }
 
-            Ok(binary_payload)
+            Ok(ImageResponse {
+                bytes: binary_payload,
+                response_headers: headers,
+            })
         }
     }
 }

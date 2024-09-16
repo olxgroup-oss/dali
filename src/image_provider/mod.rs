@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 
 #[cfg(feature = "reqwest")]
@@ -13,9 +15,14 @@ pub mod s3;
 #[cfg(not(any(feature = "reqwest", feature = "s3")))]
 compile_error!("only 's3' is available as an extra feature for the image storage service");
 
+pub struct ImageResponse {
+    pub bytes: Vec<u8>,
+    pub response_headers: HashMap<String, Vec<u8>>,
+}
+
 #[async_trait]
 pub trait ImageProvider: Send + Sync {
-    async fn get_file(&self, resource: &str) -> Result<Vec<u8>, ImageProcessingError>;
+    async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError>;
 }
 
 #[allow(unreachable_code)]
