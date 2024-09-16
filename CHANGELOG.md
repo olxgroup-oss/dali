@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/olxgroup-oss/dali/compare/v2.0.0...v2.1.0) (2024-09-16)
+
+
+### Features
+
+* **response-headers:** forward the response headers from the storage engine to the stakeholders ([#109](https://github.com/olxgroup-oss/dali/issues/109)) ([cbbb92f](https://github.com/olxgroup-oss/dali/commit/cbbb92fee0758199eabecf45bd579ca93982bbc8))
+
 # [2.0.0](https://github.com/olxgroup-oss/dali/compare/v1.6.0...v2.0.0) (2024-02-15)
 
 
