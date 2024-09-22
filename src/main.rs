@@ -9,6 +9,7 @@ use axum::response::IntoResponse;
 use axum::{routing::get, Router};
 use image_provider::{create_image_provider, ImageProvider};
 use libvips::VipsApp;
+use log::debug;
 
 use commons::config::Configuration;
 use routes::metric::HTTP_DURATION;
@@ -22,7 +23,7 @@ mod routes;
 #[tokio::main]
 async fn main() {
     let config = Configuration::new().expect("Failed to load application configuration.");
-    println!(r#"{{"configuration": {}}}"#, config);
+    debug!(r#"{{"configuration": {}}}"#, config);
 
     set_up_logging(&config);
     let (_, _) = tokio::join!(start_main_server(&config), start_management_server(&config));
@@ -118,5 +119,7 @@ async fn start_main_server(config: &Configuration) {
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.app_port))
         .await
         .unwrap();
+    println!("Starting Server at port: {}", config.app_port);
+
     axum::serve(listener, app).await.unwrap();
 }
