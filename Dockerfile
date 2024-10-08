@@ -16,7 +16,7 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     libheif-dev=1.16.2-r0 \
     libimagequant-dev=4.2.0-r0 \
     libjpeg-turbo-dev=2.1.5.1-r3 \
-    libpng-dev=1.6.39-r3 \
+    libpng-dev=1.6.44-r0 \
     librsvg-dev=2.56.3-r0 \
     libwebp-dev=1.3.2-r0 \
     openssl-dev=3.1.7-r0 \
@@ -61,7 +61,7 @@ RUN apk add --update --no-cache  \
       libheif=1.16.2-r0 \
       libimagequant=4.2.0-r0 \
       libjpeg-turbo=2.1.5.1-r3 \
-      libpng=1.6.39-r3 \
+      libpng=1.6.44-r0 \
       librsvg=2.56.3-r0 \
       libwebp=1.3.2-r0 \
       openssl=3.1.7-r0 \
