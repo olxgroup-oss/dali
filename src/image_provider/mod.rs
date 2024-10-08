@@ -22,7 +22,7 @@ pub struct ImageResponse {
 
 #[async_trait]
 pub trait ImageProvider: Send + Sync {
-    async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError>;
+    async fn get_file(&self, resource: &str, config: &Configuration) -> Result<ImageResponse, ImageProcessingError>;
 }
 
 #[allow(unreachable_code)]

@@ -12,13 +12,14 @@ pub mod s3 {
     use async_trait::async_trait;
     use aws_config::{BehaviorVersion, Region};
     use aws_sdk_s3::error::ProvideErrorMetadata;
+    use futures::TryStreamExt;
 
     use crate::commons::config::Configuration;
     use crate::image_provider::ImageResponse;
     use crate::image_provider::{
         ImageProcessingError::{
             self, ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
-            InvalidResourceUriProvided,
+            InvalidResourceUriProvided, FileSizeExceeded,
         },
         ImageProvider,
     };
@@ -80,7 +81,7 @@ pub mod s3 {
 
     #[async_trait]
     impl ImageProvider for S3ImageProvider {
-        async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError> {
+        async fn get_file(&self, resource: &str, config: &Configuration) -> Result<ImageResponse, ImageProcessingError> {
             if String::from(resource).is_empty() {
                 error!("the provided resource uri is empty");
                 return Err(InvalidResourceUriProvided(String::new()));
@@ -145,27 +146,49 @@ pub mod s3 {
                     })
                     .collect(),
             };
-            let mut binary_payload: Vec<u8> = Vec::new();
-            while let Some(bytes) = result.body.try_next().await.map_err(|e| {
-                error!(
-                    "failed to read the response for the file '{}'. error: '{}'",
-                    resource, e
-                );
-                ImageDownloadFailed
-            })? {
-                binary_payload.write_all(&bytes).map_err(|e| {
+            if let Some(max_size) = config.max_file_size {
+                let mut binary_payload: Vec<u8> = Vec::new();
+                let mut total_bytes = 0;
+                while let Some(bytes) = result.body.try_next().await.map_err(|e| {
                     error!(
                         "failed to read the response for the file '{}'. error: '{}'",
                         resource, e
                     );
                     ImageDownloadFailed
+                })? {
+                    total_bytes += bytes.len() as u32;
+                    if total_bytes > max_size {
+                        error!(
+                            "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
+                            resource, max_size
+                        );
+                        return Err(FileSizeExceeded);
+                    }
+                    binary_payload.write_all(&bytes).map_err(|e| {
+                        error!(
+                            "failed to read the response for the file '{}'. error: '{}'",
+                            resource, e
+                        );
+                        ImageDownloadFailed
+                    })?;
+                }
+                Ok(ImageResponse {
+                    bytes: binary_payload,
+                    response_headers: headers,
+                })
+            } else {
+                let bytes = result.body.collect().await.map_err(|e| {
+                    error!(
+                        "failed to read the binary payload of the image '{}'. error: {}",
+                        resource, e
+                    );
+                    ImageDownloadFailed
                 })?;
+                Ok(ImageResponse {
+                    bytes: bytes.into_bytes().to_vec(),
+                    response_headers: headers,
+                })
             }
-
-            Ok(ImageResponse {
-                bytes: binary_payload,
-                response_headers: headers,
-            })
         }
     }
 }

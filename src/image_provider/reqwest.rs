@@ -3,13 +3,14 @@ pub mod client {
     use std::time::Duration;
 
     use async_trait::async_trait;
+    use futures::StreamExt;
     use log::error;
     use reqwest::{Client, Url};
 
     use crate::commons::config::Configuration;
     use crate::image_provider::ImageProcessingError::{
         ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
-        InvalidResourceUriProvided,
+        InvalidResourceUriProvided, FileSizeExceeded
     };
     use crate::image_provider::{ImageProvider, ImageResponse};
     use crate::routes::image::ImageProcessingError;
@@ -49,7 +50,7 @@ pub mod client {
 
     #[async_trait]
     impl ImageProvider for ReqwestImageProvider {
-        async fn get_file(&self, resource: &str) -> Result<ImageResponse, ImageProcessingError> {
+        async fn get_file(&self, resource: &str, config: &Configuration) -> Result<ImageResponse, ImageProcessingError> {
             let url = Url::parse(resource).map_err(|_| {
                 error!(
                     "the provided resource uri is not a valid http url: '{}'",
@@ -82,17 +83,45 @@ pub mod client {
                 })
                 .collect();
             if status.is_success() {
-                let bytes = response.bytes().await.map_err(|e| {
-                    error!(
-                        "failed to read the binary payload of the image '{}'. error: {}",
-                        resource, e
-                    );
-                    ImageDownloadFailed
-                })?;
-                Ok(ImageResponse {
-                    bytes: bytes.to_vec(),
-                    response_headers: headers,
-                })
+                if let Some(max_size) = config.max_file_size {
+                    let mut stream = response.bytes_stream();
+                    let mut total_bytes = 0;
+                    let mut bytes = Vec::new();
+                    while let Some(chunk) = stream.next().await {
+                        let chunk = chunk.map_err(|e| {
+                            error!(
+                                "failed to read the binary payload of the image '{}'. error: {}",
+                                resource, e
+                            );
+                            ImageDownloadFailed
+                        })?;
+                        total_bytes += chunk.len() as u32;
+                        if total_bytes > max_size {
+                            error!(
+                                "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
+                                resource, max_size
+                            );
+                            return Err(FileSizeExceeded);
+                        }
+                        bytes.extend_from_slice(&chunk);
+                    }
+                    Ok(ImageResponse {
+                        bytes,
+                        response_headers: headers,
+                    })
+                } else {
+                    let bytes = response.bytes().await.map_err(|e| {
+                        error!(
+                            "failed to read the binary payload of the image '{}'. error: {}",
+                            resource, e
+                        );
+                        ImageDownloadFailed
+                    })?;
+                    Ok(ImageResponse {
+                        bytes: bytes.to_vec(),
+                        response_headers: headers,
+                    })
+                }
             } else if status.is_client_error() {
                 error!(
                     "the requested image '{}' couldn't be downloaded. received status code: {}",

@@ -6,7 +6,7 @@ use serde::Serialize;
 use std::env;
 use std::fmt;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Configuration {
     pub app_port: u16,
     pub health_port: u16,
@@ -21,6 +21,7 @@ pub struct Configuration {
     pub s3_secret: Option<String>,
     pub s3_endpoint: Option<String>,
     pub s3_bucket: Option<String>,
+    pub max_file_size: Option<u32>,
 }
 
 impl fmt::Display for Configuration {
