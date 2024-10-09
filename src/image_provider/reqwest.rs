@@ -101,7 +101,7 @@ pub mod client {
                                 "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
                                 resource, max_size
                             );
-                            return Err(FileSizeExceeded);
+                            return Err(FileSizeExceeded(max_size));
                         }
                         bytes.extend_from_slice(&chunk);
                     }

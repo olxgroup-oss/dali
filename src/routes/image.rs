@@ -71,8 +71,8 @@ pub enum ImageProcessingError {
     ProcessingWorkerJoinError,
     #[error("the image processing with libvips has failed")]
     LibvipsProcessingFailed(libvips::error::Error),
-    #[error("The image exceeds the allowed size")]
-    FileSizeExceeded,
+    #[error("the image exceeds the allowed size")]
+    FileSizeExceeded(u32),
 }
 
 impl IntoResponse for ImageProcessingError {
@@ -99,9 +99,9 @@ impl IntoResponse for ImageProcessingError {
                 StatusCode::BAD_REQUEST,
                 format!("The provided resource URI is not valid: '{}'", resource_uri)
             ),
-            ImageProcessingError::FileSizeExceeded => (
+            ImageProcessingError::FileSizeExceeded(max_allowed_size) => (
                 StatusCode::BAD_REQUEST,
-                String::from("The image exceeds the allowed size. Please ensure the file size is within the permissible limit."),
+                format!("The image exceeds the allowed size of {max_allowed_size} bytes. Please ensure the file size is within the permissible limit or adjust the configuration."),
             ),
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -118,17 +118,21 @@ impl IntoResponse for ImageProcessingError {
 }
 
 pub async fn process_image(
-    State(app_state): State<AppState>,
+    State(AppState {
+              vips_app,
+              image_provider,
+              config,
+          }): State<AppState>,
     ProcessImageRequestExtractor(params): ProcessImageRequestExtractor<ProcessImageRequest>,
 ) -> Result<Response<Body>, ImageProcessingError> {
     let now = SystemTime::now();
-    let main_img = app_state.image_provider.get_file(&params.image_address, &app_state.config).await?;
+    let main_img = image_provider.get_file(&params.image_address, &config).await?;
     let mut total_input_size = main_img.bytes.len();
 
     let watermarks_futures = params
         .watermarks
         .iter()
-        .map(|wm| app_state.image_provider.get_file(&wm.image_address, &app_state.config));
+        .map(|wm| image_provider.get_file(&wm.image_address, &config));
     let watermarks = join_all(watermarks_futures)
         .await
         .into_iter()
@@ -174,7 +178,7 @@ pub async fn process_image(
     .map_err(|e| {
         error!(
             "the image processing has failed for the resource with the error: {}. libvips raw error is: {}",
-            e, app_state.vips_app.error_buffer().unwrap_or("").replace("\n", ". ")
+            e, vips_app.error_buffer().unwrap_or("").replace("\n", ". ")
         );
         ImageProcessingError::LibvipsProcessingFailed(e)
     })?;

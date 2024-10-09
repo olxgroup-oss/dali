@@ -162,7 +162,7 @@ pub mod s3 {
                             "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
                             resource, max_size
                         );
-                        return Err(FileSizeExceeded);
+                        return Err(FileSizeExceeded(max_size));
                     }
                     binary_payload.write_all(&bytes).map_err(|e| {
                         error!(
@@ -177,15 +177,24 @@ pub mod s3 {
                     response_headers: headers,
                 })
             } else {
-                let bytes = result.body.collect().await.map_err(|e| {
+                let mut binary_payload: Vec<u8> = Vec::new();
+                while let Some(bytes) = result.body.try_next().await.map_err(|e| {
                     error!(
-                        "failed to read the binary payload of the image '{}'. error: {}",
+                        "failed to read the response for the file '{}'. error: '{}'",
                         resource, e
                     );
                     ImageDownloadFailed
-                })?;
+                })? {
+                    binary_payload.write_all(&bytes).map_err(|e| {
+                        error!(
+                            "failed to read the response for the file '{}'. error: '{}'",
+                            resource, e
+                        );
+                        ImageDownloadFailed
+                    })?;
+                }
                 Ok(ImageResponse {
-                    bytes: bytes.into_bytes().to_vec(),
+                    bytes: binary_payload,
                     response_headers: headers,
                 })
             }
