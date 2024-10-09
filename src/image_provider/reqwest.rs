@@ -3,7 +3,7 @@ pub mod client {
     use std::time::Duration;
 
     use async_trait::async_trait;
-    use futures::StreamExt;
+    use futures::{TryStreamExt};
     use log::error;
     use reqwest::{Client, Url};
 
@@ -87,14 +87,13 @@ pub mod client {
                     let mut stream = response.bytes_stream();
                     let mut total_bytes = 0;
                     let mut bytes = Vec::new();
-                    while let Some(chunk) = stream.next().await {
-                        let chunk = chunk.map_err(|e| {
-                            error!(
-                                "failed to read the binary payload of the image '{}'. error: {}",
-                                resource, e
-                            );
-                            ImageDownloadFailed
-                        })?;
+                    while let Some(chunk) = stream.try_next().await.map_err(|e| {
+                        error!(
+                            "failed to read the binary payload of the image '{}'. error: {}",
+                            resource, e
+                        );
+                        ImageDownloadFailed
+                    })? {
                         total_bytes += chunk.len() as u32;
                         if total_bytes > max_size {
                             error!(
