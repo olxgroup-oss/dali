@@ -146,16 +146,16 @@ pub mod s3 {
                     })
                     .collect(),
             };
-            if let Some(max_size) = config.max_file_size {
-                let mut binary_payload: Vec<u8> = Vec::new();
-                let mut total_bytes = 0;
-                while let Some(bytes) = result.body.try_next().await.map_err(|e| {
-                    error!(
-                        "failed to read the response for the file '{}'. error: '{}'",
-                        resource, e
-                    );
-                    ImageDownloadFailed
-                })? {
+            let mut binary_payload: Vec<u8> = Vec::new();
+            let mut total_bytes = 0;
+            while let Some(bytes) = result.body.try_next().await.map_err(|e| {
+                error!(
+                    "failed to read the response for the file '{}'. error: '{}'",
+                    resource, e
+                );
+                ImageDownloadFailed
+            })? {
+                if let Some(max_size) = config.max_file_size {
                     total_bytes += bytes.len() as u32;
                     if total_bytes > max_size {
                         error!(
@@ -164,40 +164,19 @@ pub mod s3 {
                         );
                         return Err(FileSizeExceeded(max_size));
                     }
-                    binary_payload.write_all(&bytes).map_err(|e| {
-                        error!(
-                            "failed to read the response for the file '{}'. error: '{}'",
-                            resource, e
-                        );
-                        ImageDownloadFailed
-                    })?;
                 }
-                Ok(ImageResponse {
-                    bytes: binary_payload,
-                    response_headers: headers,
-                })
-            } else {
-                let mut binary_payload: Vec<u8> = Vec::new();
-                while let Some(bytes) = result.body.try_next().await.map_err(|e| {
+                binary_payload.write_all(&bytes).map_err(|e| {
                     error!(
                         "failed to read the response for the file '{}'. error: '{}'",
                         resource, e
                     );
                     ImageDownloadFailed
-                })? {
-                    binary_payload.write_all(&bytes).map_err(|e| {
-                        error!(
-                            "failed to read the response for the file '{}'. error: '{}'",
-                            resource, e
-                        );
-                        ImageDownloadFailed
-                    })?;
-                }
-                Ok(ImageResponse {
-                    bytes: binary_payload,
-                    response_headers: headers,
-                })
+                })?;
             }
+            Ok(ImageResponse {
+                bytes: binary_payload,
+                response_headers: headers,
+            })
         }
     }
 }
