@@ -1,9 +1,10 @@
 #[cfg(feature = "reqwest")]
 pub mod client {
+    use std::io::Write;
     use std::time::Duration;
 
     use async_trait::async_trait;
-    use futures::{TryStreamExt};
+    use futures::TryStreamExt;
     use log::error;
     use reqwest::{Client, Url};
 
@@ -83,18 +84,18 @@ pub mod client {
                 })
                 .collect();
             if status.is_success() {
-                if let Some(max_size) = config.max_file_size {
-                    let mut stream = response.bytes_stream();
-                    let mut total_bytes = 0;
-                    let mut bytes = Vec::new();
-                    while let Some(chunk) = stream.try_next().await.map_err(|e| {
-                        error!(
-                            "failed to read the binary payload of the image '{}'. error: {}",
-                            resource, e
-                        );
-                        ImageDownloadFailed
-                    })? {
-                        total_bytes += chunk.len() as u32;
+                let mut stream = response.bytes_stream();
+                let mut total_bytes = 0;
+                let mut binary_payload: Vec<u8> = Vec::new();
+                while let Some(bytes) = stream.try_next().await.map_err(|e| {
+                    error!(
+                        "failed to read the binary payload of the image '{}'. error: {}",
+                        resource, e
+                    );
+                    ImageDownloadFailed
+                })? {
+                    if let Some(max_size) = config.max_file_size {
+                        total_bytes += bytes.len() as u32;
                         if total_bytes > max_size {
                             error!(
                                 "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
@@ -102,25 +103,19 @@ pub mod client {
                             );
                             return Err(FileSizeExceeded(max_size));
                         }
-                        bytes.extend_from_slice(&chunk);
                     }
-                    Ok(ImageResponse {
-                        bytes,
-                        response_headers: headers,
-                    })
-                } else {
-                    let bytes = response.bytes().await.map_err(|e| {
+                    binary_payload.write_all(&bytes).map_err(|e| {
                         error!(
-                            "failed to read the binary payload of the image '{}'. error: {}",
-                            resource, e
-                        );
+                        "failed to read the response for the file '{}'. error: '{}'",
+                        resource, e
+                    );
                         ImageDownloadFailed
                     })?;
-                    Ok(ImageResponse {
-                        bytes: bytes.to_vec(),
-                        response_headers: headers,
-                    })
                 }
+                Ok(ImageResponse {
+                    bytes: binary_payload,
+                    response_headers: headers,
+                })
             } else if status.is_client_error() {
                 error!(
                     "the requested image '{}' couldn't be downloaded. received status code: {}",
