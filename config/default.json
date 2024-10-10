@@ -10,5 +10,6 @@
   "s3_key": "root",
   "s3_secret": "rootpassword",
   "s3_endpoint": "http://localhost:2969/",
-  "s3_bucket": "dali-private"
+  "s3_bucket": "dali-private",
+  "max_file_size" : 41943040
 }
