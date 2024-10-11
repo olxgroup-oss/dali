@@ -15,7 +15,9 @@ use thiserror::Error;
 
 use crate::{
     commons::{ImageFormat, ProcessImageRequest},
-    image_processor, AppState,
+    image_processor,
+    routes::metric::FILES_EXCEEDING_MAX_ALLOWED_SIZE,
+    AppState,
 };
 
 use super::metric::{FETCH_DURATION, INPUT_SIZE, OUTPUT_SIZE};
@@ -71,6 +73,8 @@ pub enum ImageProcessingError {
     ProcessingWorkerJoinError,
     #[error("the image processing with libvips has failed")]
     LibvipsProcessingFailed(libvips::error::Error),
+    #[error("the image exceeds the allowed size")]
+    FileSizeExceeded(u32),
 }
 
 impl IntoResponse for ImageProcessingError {
@@ -97,6 +101,12 @@ impl IntoResponse for ImageProcessingError {
                 StatusCode::BAD_REQUEST,
                 format!("The provided resource URI is not valid: '{}'", resource_uri)
             ),
+            ImageProcessingError::FileSizeExceeded(max_allowed_size) => {
+                FILES_EXCEEDING_MAX_ALLOWED_SIZE.inc();
+                (
+                StatusCode::BAD_REQUEST,
+                format!("The image exceeds the allowed size of {max_allowed_size} bytes. Please ensure the file size is within the permissible limit or adjust the configuration."),
+            )},
             _ => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 String::from("Something went wrong on our side."),
@@ -115,17 +125,20 @@ pub async fn process_image(
     State(AppState {
         vips_app,
         image_provider,
+        config,
     }): State<AppState>,
     ProcessImageRequestExtractor(params): ProcessImageRequestExtractor<ProcessImageRequest>,
 ) -> Result<Response<Body>, ImageProcessingError> {
     let now = SystemTime::now();
-    let main_img = image_provider.get_file(&params.image_address).await?;
+    let main_img = image_provider
+        .get_file(&params.image_address, &config)
+        .await?;
     let mut total_input_size = main_img.bytes.len();
 
     let watermarks_futures = params
         .watermarks
         .iter()
-        .map(|wm| image_provider.get_file(&wm.image_address));
+        .map(|wm| image_provider.get_file(&wm.image_address, &config));
     let watermarks = join_all(watermarks_futures)
         .await
         .into_iter()
