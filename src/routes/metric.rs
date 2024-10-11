@@ -5,7 +5,9 @@ use axum::{
 };
 use lazy_static::lazy_static;
 use log::error;
-use prometheus::{register_histogram_vec, Encoder, HistogramVec, TextEncoder};
+use prometheus::{
+    register_histogram_vec, register_int_counter, Encoder, HistogramVec, IntCounter, TextEncoder,
+};
 use prometheus_static_metric::make_static_metric;
 
 make_static_metric! {
@@ -62,6 +64,11 @@ lazy_static! {
         "dali_output_size",
         "Number of bytes sent to clients",
         &["format"]
+    )
+    .expect("Cannot register metric");
+    pub static ref FILES_EXCEEDING_MAX_ALLOWED_SIZE: IntCounter = register_int_counter!(
+        "dali_files_exceeding_max_allowed_size",
+        "Amount of files that were not processed due to exceeding the maximum allowed size"
     )
     .expect("Cannot register metric");
     pub static ref HTTP_DURATION: HttpRequestDuration =
