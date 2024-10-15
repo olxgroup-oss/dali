@@ -44,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SEM_REL_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.SEM_REL_TOKEN }}
-          GITHUB_USER: ${{ github.repository_owner }}
+          GITHUB_USER: ${{ vars.SEM_REL_USERNAME }}
         with:
           semantic_version: 22.0.8
           dry_run: false
