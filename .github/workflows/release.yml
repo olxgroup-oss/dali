@@ -36,7 +36,7 @@ jobs:
       - name: Install semantic-release-cargo
         uses: taiki-e/install-action@v2
         with:
-          tool: semantic-release-cargo@2
+          tool: semantic-release-cargo@2.3.65
 
       - name: Semantic Release
         id: semantic
