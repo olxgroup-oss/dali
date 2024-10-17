@@ -1,3 +1,16 @@
+# [2.2.0](https://github.com/olxgroup-oss/dali/compare/v2.1.0...v2.2.0) (2024-10-17)
+
+
+### Bug Fixes
+
+* **semantic-release-action:** revert to older version ([0a610a6](https://github.com/olxgroup-oss/dali/commit/0a610a6aa4317aa283b31d7635e9ec248fabe5e0))
+* **semantic-release-action:** use specific semantic-release-cargo version ([4c27074](https://github.com/olxgroup-oss/dali/commit/4c27074e8b95cee4ab476dd918d5f2efacf6570d))
+
+
+### Features
+
+* **file size limitation:** add max_file_size configuration and stop fetching if limit is exceeded ([520e116](https://github.com/olxgroup-oss/dali/commit/520e116b9cb5481a32777bf115b9dfa26281883f))
+
 # [2.1.0](https://github.com/olxgroup-oss/dali/compare/v2.0.0...v2.1.0) (2024-09-16)
 
 
