@@ -40,7 +40,7 @@ jobs:
 
       - name: Semantic Release
         id: semantic
-        uses: cycjimmy/semantic-release-action@v4
+        uses: cycjimmy/semantic-release-action@v4.1.0
         env:
           GH_TOKEN: ${{ secrets.SEM_REL_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.SEM_REL_TOKEN }}
