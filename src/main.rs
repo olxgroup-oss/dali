@@ -1,3 +1,4 @@
+// (c) Copyright 2019-2024 OLX
 use std::env;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -13,7 +14,6 @@ use libvips::VipsApp;
 use commons::config::Configuration;
 use routes::metric::HTTP_DURATION;
 
-// (c) Copyright 2019-2024 OLX
 mod commons;
 mod image_processor;
 mod image_provider;
@@ -23,6 +23,9 @@ mod routes;
 async fn main() {
     let config = Configuration::new().expect("Failed to load application configuration.");
     println!(r#"{{"configuration": {}}}"#, config);
+
+    #[cfg(feature = "opentelemetry")]
+    commons::open_telemetry::init_opentelemetry(&config).await;
 
     set_up_logging(&config);
     let (_, _) = tokio::join!(start_main_server(&config), start_management_server(&config));

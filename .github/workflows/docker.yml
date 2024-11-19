@@ -87,3 +87,27 @@ jobs:
           push: true
           tags: ${{ steps.meta-s3.outputs.tags }}
           labels: ${{ steps.meta-s3.outputs.labels }}
+      
+      - name: Docker meta for the Dali image with the reqwest and opentelemetry features
+        id: meta-reqwest-opentelemetry
+        uses: docker/metadata-action@v5
+        with:
+          flavor: latest=true
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=master,enable={{is_default_branch}}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+
+      - name: Build and push with the reqwest and opentelemetry features
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: DALI_FEATURES=reqwest,opentelemetry
+          push: true
+          tags: ${{ steps.meta-reqwest-opentelemetry.outputs.tags }}
+          labels: ${{ steps.meta-reqwest-opentelemetry.outputs.labels }}
