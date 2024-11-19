@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2024 OLX
 [package]
 name = "dali"
-version = "2.2.0"
+version = "2.3.0"
 authors = ["Augusto César Dias <augusto.dias@olx.com>"]
 edition = "2021"
 

@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/olxgroup-oss/dali/compare/v2.2.0...v2.3.0) (2024-11-19)
+
+
+### Features
+
+* **opentelemetry:** add OpenTelemetry support as a separate feature ([#111](https://github.com/olxgroup-oss/dali/issues/111)) ([ab95815](https://github.com/olxgroup-oss/dali/commit/ab958157c7d85b79324367439374ede396feee99))
+
 # [2.2.0](https://github.com/olxgroup-oss/dali/compare/v2.1.0...v2.2.0) (2024-10-17)
 
 
