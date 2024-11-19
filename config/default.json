@@ -11,5 +11,7 @@
   "s3_secret": "rootpassword",
   "s3_endpoint": "http://localhost:2969/",
   "s3_bucket": "dali-private",
-  "max_file_size" : 41943040
+  "max_file_size" : 41943040,
+  "otel_collector_endpoint": "http://localhost:4317",
+  "otel_application_name": "dali"
 }

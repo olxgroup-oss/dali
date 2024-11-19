@@ -2,6 +2,8 @@
 
 pub mod config;
 pub mod errors;
+#[cfg(feature = "opentelemetry")]
+pub mod open_telemetry;
 
 use errors::InvalidSizeError;
 use libvips::ops::Angle;
