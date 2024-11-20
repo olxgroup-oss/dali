@@ -93,7 +93,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           flavor: latest=true
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-opentelemetry
           tags: |
             # set latest tag for default branch
             type=raw,value=latest,enable={{is_default_branch}}
