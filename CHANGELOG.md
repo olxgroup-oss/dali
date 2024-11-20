@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/olxgroup-oss/dali/compare/v2.3.0...v2.4.0) (2024-11-20)
+
+
+### Features
+
+* **ci/cd:** release images with opentelemetry ([0fc3580](https://github.com/olxgroup-oss/dali/commit/0fc3580d95aee3543d3c1fba33c8df8756dfdca5))
+
 # [2.3.0](https://github.com/olxgroup-oss/dali/compare/v2.2.0...v2.3.0) (2024-11-19)
 
 
