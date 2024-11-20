@@ -111,3 +111,27 @@ jobs:
           push: true
           tags: ${{ steps.meta-reqwest-opentelemetry.outputs.tags }}
           labels: ${{ steps.meta-reqwest-opentelemetry.outputs.labels }}
+
+      - name: Docker meta for the Dali image with the s3 feature and opentelemetry
+        id: meta-s3-opentelemetry
+        uses: docker/metadata-action@v5
+        with:
+          flavor: latest=true
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-s3-opentelemetry
+          tags: |
+            # set latest tag for default branch
+            type=raw,value=latest,enable=false
+            type=raw,value=master,enable=false
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
+
+      - name: Build and push with the s3 and opentelemetry features
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: DALI_FEATURES=s3,opentelemetry
+          push: true
+          tags: ${{ steps.meta-s3-opentelemetry.outputs.tags }}
+          labels: ${{ steps.meta-s3-opentelemetry.outputs.labels }}

@@ -12,7 +12,6 @@ pub mod s3 {
     use async_trait::async_trait;
     use aws_config::{BehaviorVersion, Region};
     use aws_sdk_s3::error::ProvideErrorMetadata;
-    use futures::TryStreamExt;
 
     use crate::commons::config::Configuration;
     use crate::image_provider::ImageResponse;
