@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2024 OLX
+// (c) Copyright 2019-2025 OLX
 
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
