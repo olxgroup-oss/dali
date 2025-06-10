@@ -1,4 +1,4 @@
-# (c) Copyright 2019-2024 OLX
+# (c) Copyright 2019-2025 OLX
 DOCKER_REGISTRY ?= ghcr.io
 DOCKER_ORG ?= olxgroup-oss
 DALI_IMAGE_NAME ?= $(DOCKER_REGISTRY)/$(DOCKER_ORG)/dali/dali

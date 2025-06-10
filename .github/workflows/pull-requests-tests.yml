@@ -25,7 +25,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: rust:1.74.0-alpine3.18
+    container: rust:1.81.0-alpine3.20
     services:
       backend:
         image: nginx:latest
@@ -43,37 +43,39 @@ jobs:
         with:
           args: docker restart backend
       - name: Install build dependencies
-        run: apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/main
+        run: apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.20/main
           build-base=0.5-r3
-          clang=16.0.6-r1
-          clang16-libclang=16.0.6-r1
-          expat-dev=2.6.4-r0
+          clang17=17.0.6-r1
+          clang16-libclang=16.0.6-r5
+          expat-dev=2.7.0-r0
           giflib-dev=5.2.2-r0
-          glib-dev=2.76.6-r0
-          lcms2-dev=2.15-r2
-          libexif-dev=0.6.24-r1
-          libheif-dev=1.16.2-r0
-          libimagequant-dev=4.2.0-r0
-          libjpeg-turbo-dev=2.1.5.1-r3
+          glib-dev=2.80.5-r0
+          lcms2-dev=2.16-r0
+          libexif-dev=0.6.24-r2
+          libheif-dev=1.17.6-r1
+          libimagequant-dev=4.2.2-r0
+          libjpeg-turbo-dev=3.0.3-r0
           libpng-dev=1.6.44-r0
-          librsvg-dev=2.56.3-r0
+          librsvg-dev=2.58.5-r0
           libwebp-dev=1.3.2-r0
-          openssl-dev=3.1.7-r1
-          orc-dev=0.4.39-r0
-          pkgconf=1.9.5-r0
-          tiff-dev=4.5.1-r0
+          openssl-dev=3.3.3-r0
+          orc-dev=0.4.40-r0
+          pkgconf=2.2.0-r0
+          tiff-dev=4.6.0t-r0
+          meson=1.4.0-r2
+          samurai=1.2-r5
           tar
           curl
       - name: Install Libvips
         run: |
-          wget https://github.com/libvips/libvips/releases/download/v8.13.3/vips-8.13.3.tar.gz
+          wget https://github.com/libvips/libvips/archive/refs/tags/v8.16.1.tar.gz
           mkdir /vips
-          tar xvzf vips-8.13.3.tar.gz -C /vips --strip-components 1
+          tar xvzf v8.16.1.tar.gz -C /vips --strip-components 1
           cd /vips
-          ./configure --enable-debug=no --without-OpenEXR --disable-static --enable-silent-rule
-          make
-          make install
-          rm -rf vips vips-8.13.3.tar.gz
+          meson setup build --buildtype=release --prefix=/usr/local -Ddebug=false -Dopenexr=disabled
+          ninja -C build
+          ninja -C build install
+          rm -rf vips v8.16.1.tar.gz
       - name: Check if nginx is available for files hosting
         run: curl http://backend/exif --output /dev/null
       # Cache needs the Cargo.lock file for the cache key and must come after the git checkout

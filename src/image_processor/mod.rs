@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2024 OLX
+// (c) Copyright 2019-2025 OLX
 
 use crate::commons::*;
 use libvips::ops;
@@ -117,7 +117,7 @@ pub fn process_image(
             let options = ops::JpegsaveBufferOptions {
                 q: quality,
                 background: vec![255.0],
-                strip: true,
+                keep: ops::ForeignKeep::None,
                 optimize_coding: true,
                 optimize_scans: true,
                 interlace: true,
@@ -128,7 +128,7 @@ pub fn process_image(
         ImageFormat::Webp => {
             let options = ops::WebpsaveBufferOptions {
                 q: quality,
-                strip: true,
+                keep: ops::ForeignKeep::None,
                 effort: 2,
                 ..ops::WebpsaveBufferOptions::default()
             };
@@ -137,7 +137,7 @@ pub fn process_image(
         ImageFormat::Png => {
             let options = ops::PngsaveBufferOptions {
                 q: quality,
-                strip: true,
+                keep: ops::ForeignKeep::None,
                 bitdepth: 8,
                 ..ops::PngsaveBufferOptions::default()
             };
@@ -146,7 +146,7 @@ pub fn process_image(
         ImageFormat::Heic => {
             let options = ops::HeifsaveBufferOptions {
                 q: quality,
-                strip: true,
+                keep: ops::ForeignKeep::None,
                 ..ops::HeifsaveBufferOptions::default()
             };
             ops::heifsave_buffer_with_opts(&final_image, &options)

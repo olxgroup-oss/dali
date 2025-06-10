@@ -1,4 +1,4 @@
-# (c) Copyright 2019-2024 OLX
+# (c) Copyright 2019-2025 OLX
 
 # Delete Docker images, caches and artifacts after PR merge
 name: "Clean Up PR"

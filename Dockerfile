@@ -1,44 +1,46 @@
-# (c) Copyright 2019-2024 OLX
+# (c) Copyright 2019-2025 OLX
 # We are manually installing and configuring libvips and each required package because previously when trying to use
 # the community built bundles (i.e. vips and vips-heif) the performace of Dali has been significantly degraded.
-FROM rust:1.74.0-alpine3.18 as build
+FROM rust:1.81.0-alpine3.20 AS build
 
 WORKDIR /usr/src/dali
-RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.18/main \
+RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.20/main \
     build-base=0.5-r3 \
-    clang=16.0.6-r1 \
-    clang16-libclang=16.0.6-r1 \
-    expat-dev=2.6.4-r0 \
+    clang17=17.0.6-r1 \
+    clang16-libclang=16.0.6-r5 \
+    expat-dev=2.7.0-r0 \
     giflib-dev=5.2.2-r0 \
-    glib-dev=2.76.6-r0 \
-    lcms2-dev=2.15-r2 \
-    libexif-dev=0.6.24-r1 \
-    libheif-dev=1.16.2-r0 \
-    libimagequant-dev=4.2.0-r0 \
-    libjpeg-turbo-dev=2.1.5.1-r3 \
+    glib-dev=2.80.5-r0 \
+    lcms2-dev=2.16-r0 \
+    libexif-dev=0.6.24-r2 \
+    libheif-dev=1.17.6-r1 \
+    libimagequant-dev=4.2.2-r0 \
+    libjpeg-turbo-dev=3.0.3-r0 \
     libpng-dev=1.6.44-r0 \
-    librsvg-dev=2.56.3-r0 \
+    librsvg-dev=2.58.5-r0 \
     libwebp-dev=1.3.2-r0 \
-    openssl-dev=3.1.7-r1 \
-    orc-dev=0.4.39-r0 \
-    pkgconf=1.9.5-r0 \
-    tiff-dev=4.5.1-r0
+    openssl-dev=3.3.3-r0 \
+    orc-dev=0.4.40-r0 \
+    pkgconf=2.2.0-r0 \
+    tiff-dev=4.6.0t-r0 \
+    meson=1.4.0-r2 \
+    samurai=1.2-r5
 
-RUN wget https://github.com/libvips/libvips/releases/download/v8.13.3/vips-8.13.3.tar.gz && \
+RUN wget https://github.com/libvips/libvips/archive/refs/tags/v8.16.1.tar.gz && \
     mkdir /vips && \
-    tar xvzf vips-8.13.3.tar.gz -C /vips --strip-components 1 && \
+    tar xvzf v8.16.1.tar.gz -C /vips --strip-components 1 && \
     cd /vips && \
-    ./configure --enable-debug=no --without-OpenEXR --disable-static --enable-silent-rule && \
-    make && \
-    make install && \
-    rm -rf vips vips-8.13.3.tar.gz
+    meson setup build --buildtype=release --prefix=/usr/local -Ddebug=false -Dopenexr=disabled && \
+    ninja -C build && \
+    ninja -C build install && \
+    rm -rf vips v8.16.1.tar.gz
 
 COPY . .
 
 ARG DALI_FEATURES=reqwest
 RUN RUSTFLAGS="-C target-feature=-crt-static $(pkg-config vips --libs)" cargo build --features ${DALI_FEATURES} --release
 
-FROM alpine:3.18.4
+FROM alpine:3.20.0
 ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
 
 # With the next command, the libvips bianries are copied from the previous stage hence we don't have to install it again.
@@ -49,24 +51,26 @@ ENV GI_TYPELIB_PATH=/usr/lib/girepository-1.0
 COPY --from=build /usr/local/lib /usr/local/lib
 
 RUN apk add --update --no-cache  \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/main  \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/v3.18/community \
-      expat=2.6.4-r0 \
+    --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/main  \
+    --repository=https://dl-cdn.alpinelinux.org/alpine/v3.20/community \
+      expat=2.7.0-r0 \
       giflib=5.2.2-r0 \
-      glib=2.76.6-r0 \
-      lcms2=2.15-r2 \
+      glib=2.80.5-r0 \
+      lcms2=2.16-r0 \
       libde265=1.0.15-r0 \
-      libexif=0.6.24-r1 \
-      libgsf=1.14.50-r1 \
-      libheif=1.16.2-r0 \
-      libimagequant=4.2.0-r0 \
-      libjpeg-turbo=2.1.5.1-r3 \
+      libexif=0.6.24-r2 \
+      libgsf=1.14.52-r0 \
+      libheif=1.17.6-r1 \
+      libimagequant=4.2.2-r0 \
+      libjpeg-turbo=3.0.3-r0 \
       libpng=1.6.44-r0 \
-      librsvg=2.56.3-r0 \
+      librsvg=2.58.5-r0 \
       libwebp=1.3.2-r0 \
-      openssl=3.1.7-r1 \
-      orc=0.4.39-r0 \
-      tiff=4.5.1-r0
+      libwebpdemux=1.3.2-r0 \
+      libwebpmux=1.3.2-r0 \
+      openssl=3.3.3-r0 \
+      orc=0.4.40-r0 \
+      tiff=4.6.0t-r0
 
 COPY --from=build /usr/src/dali/target/release/dali /usr/local/bin/dali
 

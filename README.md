@@ -41,11 +41,11 @@ The application will compute the number of threads by the following formula: `po
 * Libvips
 * A HTTP server for images
 * Docker
-* Rust (1.74.0)
+* Rust (1.81.0)
 
 This application relies on C libvips library. That means it has to be previously installed into the system before compiling and/or running.
 
-For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Required minimum version 8.10.1)
+For installation follow this [instructions](https://libvips.github.io/libvips/install.html). (Recommended version 8.16.1)
 
 Using `rustup` is the recommended way to install `rust`. It is a tool that manages and updates rust versions (like `nvm` for node for example). To install it, simply run `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`. Then run `rustup install 1.74.0`.
 
@@ -137,4 +137,4 @@ Watermarks is an array parameter and therefore, must be indexed when informed (0
 
 ## License
 
-(c) Copyright 2019-2024 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
+(c) Copyright 2019-2025 [OLX](https://olxgroup.com). Released under [Apache 2 License](LICENSE)
