@@ -19,7 +19,7 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     libpng-dev=1.6.44-r0 \
     librsvg-dev=2.58.5-r0 \
     libwebp-dev=1.3.2-r0 \
-    openssl-dev=3.3.3-r0 \
+    openssl-dev=3.3.4-r0 \
     orc-dev=0.4.40-r0 \
     pkgconf=2.2.0-r0 \
     tiff-dev=4.6.0t-r0 \
@@ -68,7 +68,7 @@ RUN apk add --update --no-cache  \
       libwebp=1.3.2-r0 \
       libwebpdemux=1.3.2-r0 \
       libwebpmux=1.3.2-r0 \
-      openssl=3.3.3-r0 \
+      openssl=3.3.4-r0 \
       orc=0.4.40-r0 \
       tiff=4.6.0t-r0
 
