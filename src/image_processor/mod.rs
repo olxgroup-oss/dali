@@ -108,7 +108,7 @@ pub fn process_image(
             wm
         };
         final_image =
-            ops::composite_2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
+            ops::composite2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
     }
 
     debug!("Encoding to: {}", format);
