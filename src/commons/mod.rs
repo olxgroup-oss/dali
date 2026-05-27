@@ -1,4 +1,4 @@
-// (c) Copyright 2019-2025 OLX
+// (c) Copyright 2019-2026 OLX
 
 pub mod config;
 pub mod errors;
