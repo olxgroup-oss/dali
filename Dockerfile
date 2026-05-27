@@ -6,7 +6,7 @@ FROM rust:1.95.0-alpine3.23 AS build
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.23/main \
     build-base=0.5-r3 \
-    clang17=18.1.8-r6 	 \
+    clang18=18.1.8-r6 	 \
     clang16-libclang=16.0.6-r9 \
     expat-dev=2.7.5-r0 \
     giflib-dev=5.2.2-r1 \
