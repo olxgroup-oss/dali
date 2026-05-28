@@ -68,14 +68,14 @@ jobs:
           curl
       - name: Install Libvips
         run: |
-          wget https://github.com/libvips/libvips/archive/refs/tags/v8.16.1.tar.gz
+          wget https://github.com/libvips/libvips/archive/refs/tags/v8.18.2.tar.gz
           mkdir /vips
-          tar xvzf v8.16.1.tar.gz -C /vips --strip-components 1
+          tar xvzf v8.18.2.tar.gz -C /vips --strip-components 1
           cd /vips
           meson setup build --buildtype=release --prefix=/usr/local -Ddebug=false -Dopenexr=disabled
           ninja -C build
           ninja -C build install
-          rm -rf vips v8.16.1.tar.gz
+          rm -rf vips v8.18.2.tar.gz
       - name: Check if nginx is available for files hosting
         run: curl http://backend/exif --output /dev/null
       # Cache needs the Cargo.lock file for the cache key and must come after the git checkout
