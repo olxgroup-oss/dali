@@ -1,4 +1,3 @@
-use async_trait::async_trait;
 use axum::{
     body::Body,
     extract::{FromRequest, Request, State},
@@ -39,15 +38,14 @@ const HEADERS_DETERMINED_BY_DALI: [&str; 2] = ["content-type", "content-length"]
 
 pub struct ProcessImageRequestExtractor<T>(pub T);
 
-#[async_trait]
-impl<B, T> FromRequest<B> for ProcessImageRequestExtractor<T>
+impl<S, T> FromRequest<S> for ProcessImageRequestExtractor<T>
 where
-    B: Send,
+    S: Send + Sync,
     T: DeserializeOwned + Send,
 {
     type Rejection = (StatusCode, String);
 
-    async fn from_request(req: Request, _state: &B) -> Result<Self, Self::Rejection> {
+    async fn from_request(req: Request, _state: &S) -> Result<Self, Self::Rejection> {
         let query = req.uri().query();
         if let Some(query) = query {
             let extracted_params = serde_qs::from_str(query);
