@@ -51,12 +51,6 @@ pub struct Size {
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub enum WatermarkPosition {
-    Center,
-    Point,
-}
-
-#[derive(Debug, Deserialize, Clone)]
 pub enum Rotation {
     R90,
     R180,
@@ -173,12 +167,6 @@ impl Default for Point {
 impl Default for ImageFormat {
     fn default() -> Self {
         ImageFormat::Jpeg
-    }
-}
-
-impl Default for WatermarkPosition {
-    fn default() -> Self {
-        WatermarkPosition::Point
     }
 }
 
