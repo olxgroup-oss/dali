@@ -8,7 +8,7 @@ use opentelemetry::metrics::Meter;
 use opentelemetry::{global, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
-use opentelemetry_sdk::trace::{Config, RandomIdGenerator, Sampler};
+use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler, SdkTracerProvider};
 use opentelemetry_sdk::Resource;
 use sysinfo::{MemoryRefreshKind, System};
 use tokio::{task, time};
@@ -51,19 +51,17 @@ fn init_global_tracer_provider(otel_collector_endpoint: String, otel_application
         return;
     }
 
-    let trace_config = Config::default()
+    let tracer_provider = SdkTracerProvider::builder()
+        .with_batch_exporter(exporter.unwrap())
         .with_sampler(Sampler::AlwaysOn)
         .with_id_generator(RandomIdGenerator::default())
         .with_max_events_per_span(64)
         .with_max_attributes_per_span(16)
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            otel_application_name,
-        )]));
-
-    let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
-        .with_batch_exporter(exporter.unwrap(), opentelemetry_sdk::runtime::Tokio)
-        .with_config(trace_config)
+        .with_resource(
+            Resource::builder()
+                .with_service_name(otel_application_name)
+                .build(),
+        )
         .build();
 
     global::set_tracer_provider(tracer_provider);
@@ -89,18 +87,16 @@ async fn init_global_meter_provider(
         return;
     }
 
-    let metrics_reader = opentelemetry_sdk::metrics::PeriodicReader::builder(
-        exporter.unwrap(),
-        opentelemetry_sdk::runtime::Tokio,
-    )
-    .build();
+    let metrics_reader = opentelemetry_sdk::metrics::PeriodicReader::builder(exporter.unwrap())
+        .build();
 
     let provider = opentelemetry_sdk::metrics::SdkMeterProvider::builder()
         .with_reader(metrics_reader)
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            otel_application_name,
-        )]))
+        .with_resource(
+            Resource::builder()
+                .with_service_name(otel_application_name)
+                .build(),
+        )
         .build();
 
     global::set_meter_provider(provider);
@@ -126,7 +122,7 @@ async fn schedule_memory_metrics() {
         loop {
             interval.tick().await;
 
-            system.refresh_memory_specifics(MemoryRefreshKind::new().with_ram());
+            system.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
             free_memory_gauge.record(
                 system.free_memory() / 1_000_000,
                 &[KeyValue::new("type", "free")],

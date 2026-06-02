@@ -7,7 +7,6 @@ pub mod s3 {
     use log::error;
     use std::collections::HashMap;
     use std::io::Write;
-    use thiserror::Error;
 
     use async_trait::async_trait;
     use aws_config::{BehaviorVersion, Region};
@@ -22,9 +21,6 @@ pub mod s3 {
         },
         ImageProvider,
     };
-
-    #[derive(Error, Debug)]
-    pub enum S3ProviderError {}
 
     pub struct S3ImageProvider {
         s3_client: aws_sdk_s3::Client,
@@ -52,7 +48,7 @@ pub mod s3 {
 
             let region = s3_region.as_ref().unwrap().clone();
             let mut s3_config = Builder::new()
-                .behavior_version(BehaviorVersion::v2023_11_09())
+                .behavior_version(BehaviorVersion::v2026_01_12())
                 .region(Region::new(region));
 
             if let (Some(key), Some(secret)) = (s3_key, s3_secret) {
