@@ -1,3 +1,10 @@
+## [2.4.3](https://github.com/olxgroup-oss/dali/compare/v2.4.2...v2.4.3) (2026-06-02)
+
+
+### Bug Fixes
+
+* **opentelemetry:** fix open telemetry api ([#122](https://github.com/olxgroup-oss/dali/issues/122)) ([ac07d60](https://github.com/olxgroup-oss/dali/commit/ac07d60fba0273e60592aae07be2b14ed55d00c4))
+
 ## [2.4.2](https://github.com/olxgroup-oss/dali/compare/v2.4.1...v2.4.2) (2026-06-02)
 
 
