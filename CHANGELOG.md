@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/olxgroup-oss/dali/compare/v2.4.1...v2.4.2) (2026-06-02)
+
+
+### Bug Fixes
+
+* **dead-code:** cleanup dead code ([#120](https://github.com/olxgroup-oss/dali/issues/120)) ([f423a5f](https://github.com/olxgroup-oss/dali/commit/f423a5f8c414454b27a543d9136a9e32ddb8f8c3))
+
 # [2.4.0](https://github.com/olxgroup-oss/dali/compare/v2.3.0...v2.4.0) (2024-11-20)
 
 
