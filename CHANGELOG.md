@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/olxgroup-oss/dali/compare/v2.5.0...v2.5.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* **docker:** switch docker-container driver ([cd9f99b](https://github.com/olxgroup-oss/dali/commit/cd9f99b9fa9598bf9c94898a6ae242a03529a1db))
+
 # [2.5.0](https://github.com/olxgroup-oss/dali/compare/v2.4.3...v2.5.0) (2026-06-02)
 
 
