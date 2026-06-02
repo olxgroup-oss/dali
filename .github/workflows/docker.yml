@@ -63,6 +63,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-reqwest.outputs.tags }}
           labels: ${{ steps.meta-reqwest.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
 
       - name: Docker meta for the Dali image with the s3 feature
         id: meta-s3
@@ -87,7 +88,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-s3.outputs.tags }}
           labels: ${{ steps.meta-s3.outputs.labels }}
-      
+          platforms: linux/amd64,linux/arm64
       - name: Docker meta for the Dali image with the reqwest and opentelemetry features
         id: meta-reqwest-opentelemetry
         uses: docker/metadata-action@v5
@@ -111,6 +112,7 @@ jobs:
           push: true
           tags: ${{ steps.meta-reqwest-opentelemetry.outputs.tags }}
           labels: ${{ steps.meta-reqwest-opentelemetry.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
 
       - name: Docker meta for the Dali image with the s3 feature and opentelemetry
         id: meta-s3-opentelemetry
@@ -135,3 +137,4 @@ jobs:
           push: true
           tags: ${{ steps.meta-s3-opentelemetry.outputs.tags }}
           labels: ${{ steps.meta-s3-opentelemetry.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
