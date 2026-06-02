@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/olxgroup-oss/dali/compare/v2.4.3...v2.5.0) (2026-06-02)
+
+
+### Features
+
+* **docker:** build iamges for multiple platforms ([#123](https://github.com/olxgroup-oss/dali/issues/123)) ([9ae01bb](https://github.com/olxgroup-oss/dali/commit/9ae01bbc02f8a1a33c8f4206b3e2dfd73a641d60))
+
 ## [2.4.3](https://github.com/olxgroup-oss/dali/compare/v2.4.2...v2.4.3) (2026-06-02)
 
 
