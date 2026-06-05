@@ -121,11 +121,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          flavor: latest=${{ matrix.feature.latest }}
+          flavor: latest=true
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}
           tags: |
-            type=raw,value=latest,enable=${{ matrix.feature.latest && github.ref_name == github.event.repository.default_branch }}
-            type=raw,value=master,enable=${{ matrix.feature.latest && github.ref_name == github.event.repository.default_branch }}
+            type=raw,value=latest,enable=${{ matrix.feature.latest && '{{is_default_branch}}' || 'false' }}
+            type=raw,value=master,enable=${{ matrix.feature.latest && '{{is_default_branch}}' || 'false' }}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
