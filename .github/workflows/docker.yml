@@ -133,21 +133,14 @@ jobs:
           IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}"
           VERSION="${{ steps.version.outputs.version }}"
       
-          ANNOTATION_ARGS=()
-          while IFS= read -r label; do
-            STRIPPED="${label#manifest:}"
-            [ -n "$STRIPPED" ] && ANNOTATION_ARGS+=(--annotation "$STRIPPED")
-          done <<< "${{ steps.meta.outputs.annotations }}"
-      
           docker buildx imagetools create \
             --tag "${IMAGE}:${VERSION}" \
-            "${ANNOTATION_ARGS[@]}" \
             "${IMAGE}:${VERSION}-amd64" \
             "${IMAGE}:${VERSION}-arm64"
       
           TAGS="${{ steps.meta.outputs.tags }}"
           while IFS= read -r TAG; do
             if [ "${TAG}" != "${IMAGE}:${VERSION}" ]; then
-              docker buildx imagetools create --tag "${TAG}" "${ANNOTATION_ARGS[@]}" "${IMAGE}:${VERSION}"
+              docker buildx imagetools create --tag "${TAG}" "${IMAGE}:${VERSION}"
             fi
           done <<< "${TAGS}"
