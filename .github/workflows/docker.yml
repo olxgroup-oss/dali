@@ -69,7 +69,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          flavor: latest=false
+          flavor: latest=true
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
