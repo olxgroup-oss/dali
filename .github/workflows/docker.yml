@@ -133,7 +133,7 @@ jobs:
           ANNOTATION_ARGS=()
           while IFS= read -r label; do
             [ -n "$label" ] && ANNOTATION_ARGS+=(--annotation "$label")
-          done <<< "${{ steps.meta.outputs.labels }}"
+          done <<< "${{ steps.meta.outputs.annotations }}"
       
           docker buildx imagetools create \
             --tag "${IMAGE}:${VERSION}" \
