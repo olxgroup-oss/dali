@@ -69,6 +69,12 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}
+
       - name: Build and push per-arch image
         id: build
         uses: docker/build-push-action@v5
@@ -79,6 +85,7 @@ jobs:
           platforms: ${{ matrix.platform.arch }}
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}:${{ steps.version.outputs.version }}-${{ matrix.platform.suffix }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   manifest:
     needs: build
@@ -121,19 +128,20 @@ jobs:
 
       - name: Create and push manifest
         run: |
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}"
-          VERSION="${{ steps.version.outputs.version }}"
+          while IFS= read -r label; do
+            [ -z "$label" ] && continue
+            ANNOTATION_ARGS+=("--annotation" "$label")
+          done <<< "${{ steps.meta.outputs.labels }}"
 
-          # Create manifest from per-arch images
           docker buildx imagetools create \
             --tag "${IMAGE}:${VERSION}" \
+            "${ANNOTATION_ARGS[@]}" \
             "${IMAGE}:${VERSION}-amd64" \
             "${IMAGE}:${VERSION}-arm64"
 
-          # Tag additional tags from metadata
           TAGS="${{ steps.meta.outputs.tags }}"
           for TAG in ${TAGS}; do
             if [ "${TAG}" != "${IMAGE}:${VERSION}" ]; then
-              docker buildx imagetools create --tag "${TAG}" "${IMAGE}:${VERSION}"
+              docker buildx imagetools create --tag "${TAG}" "${ANNOTATION_ARGS[@]}" "${IMAGE}:${VERSION}"
             fi
           done
