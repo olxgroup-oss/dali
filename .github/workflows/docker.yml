@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2026 OLX
 
 # This workflow is triggered when semantic-release
-# cretes a new tag in the repository.
+# creates a new tag in the repository.
 # A PAT repository secret, SEM_REL_TOKEN, is used to allow
 # a new workflow to be triggered, as GITHUB_TOKEN usage does not.
 
@@ -77,7 +77,7 @@ jobs:
 
       - name: Build and push per-arch image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -116,8 +116,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=master,enable={{is_default_branch}}
+            type=raw,value=latest,enable=true
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}
@@ -128,20 +127,23 @@ jobs:
 
       - name: Create and push manifest
         run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}${{ matrix.feature.image_suffix }}"
+          VERSION="${{ steps.version.outputs.version }}"
+      
+          ANNOTATION_ARGS=()
           while IFS= read -r label; do
-            [ -z "$label" ] && continue
-            ANNOTATION_ARGS+=("--annotation" "$label")
+            [ -n "$label" ] && ANNOTATION_ARGS+=(--annotation "$label")
           done <<< "${{ steps.meta.outputs.labels }}"
-
+      
           docker buildx imagetools create \
             --tag "${IMAGE}:${VERSION}" \
             "${ANNOTATION_ARGS[@]}" \
             "${IMAGE}:${VERSION}-amd64" \
             "${IMAGE}:${VERSION}-arm64"
-
+      
           TAGS="${{ steps.meta.outputs.tags }}"
-          for TAG in ${TAGS}; do
+          while IFS= read -r TAG; do
             if [ "${TAG}" != "${IMAGE}:${VERSION}" ]; then
               docker buildx imagetools create --tag "${TAG}" "${ANNOTATION_ARGS[@]}" "${IMAGE}:${VERSION}"
             fi
-          done
+          done <<< "${TAGS}"
