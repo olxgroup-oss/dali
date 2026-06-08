@@ -1,3 +1,10 @@
+## [2.5.2](https://github.com/olxgroup-oss/dali/compare/v2.5.1...v2.5.2) (2026-06-08)
+
+
+### Bug Fixes
+
+* **docker:** optimize multiarch docker build ([#125](https://github.com/olxgroup-oss/dali/issues/125)) ([05325c0](https://github.com/olxgroup-oss/dali/commit/05325c0bec4519e1a36531dfaf61e7ec905326a3))
+
 ## [2.5.1](https://github.com/olxgroup-oss/dali/compare/v2.5.0...v2.5.1) (2026-06-02)
 
 
