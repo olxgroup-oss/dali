@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/olxgroup-oss/dali/compare/v2.5.2...v2.6.0) (2026-06-19)
+
+
+### Features
+
+* **jemalloc:** switch to jemalloc ([#127](https://github.com/olxgroup-oss/dali/issues/127)) ([0072aee](https://github.com/olxgroup-oss/dali/commit/0072aeee2766f2f0c256f42f3001045352e1ca9d))
+
 ## [2.5.2](https://github.com/olxgroup-oss/dali/compare/v2.5.1...v2.5.2) (2026-06-08)
 
 
