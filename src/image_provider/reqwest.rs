@@ -84,9 +84,10 @@ pub mod client {
                 })
                 .collect();
             if status.is_success() {
+                let response_length = response.content_length().unwrap_or(0);
                 let mut stream = response.bytes_stream();
                 let mut total_bytes = 0;
-                let mut binary_payload: Vec<u8> = Vec::new();
+                let mut binary_payload: Vec<u8> = Vec::with_capacity(response_length as usize);
                 while let Some(bytes) = stream.try_next().await.map_err(|e| {
                     error!(
                         "failed to read the binary payload of the image '{}'. error: {}",
