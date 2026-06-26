@@ -3,7 +3,7 @@ pub mod s3 {
     use aws_config::default_provider::credentials::DefaultCredentialsChain;
     use aws_sdk_s3::config::Builder;
     use aws_sdk_s3::error::SdkError;
-    use axum::http::StatusCode;
+    use axum::http::{StatusCode};
     use log::error;
     use std::collections::HashMap;
     use std::io::Write;
@@ -141,7 +141,8 @@ pub mod s3 {
                     })
                     .collect(),
             };
-            let mut binary_payload: Vec<u8> = Vec::new();
+            let response_length = result.content_length().unwrap_or(0).max(0) as usize;
+            let mut binary_payload: Vec<u8> = Vec::with_capacity(response_length);
             let mut total_bytes = 0;
             while let Some(bytes) = result.body.try_next().await.map_err(|e| {
                 error!(
