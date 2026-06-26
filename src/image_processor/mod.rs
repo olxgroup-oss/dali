@@ -5,10 +5,11 @@ use libvips::ops;
 use libvips::Result;
 use libvips::VipsImage;
 use log::*;
+use std::sync::Arc;
 
 pub fn process_image(
     buffer: Vec<u8>,
-    wm_buffers: Vec<Vec<u8>>,
+    wm_buffers: Vec<Arc<Vec<u8>>>,
     parameters: ProcessImageRequest,
 ) -> Result<Vec<u8>> {
     let ProcessImageRequest {
@@ -55,8 +56,7 @@ pub fn process_image(
     for (i, wm_buffer) in wm_buffers.iter().enumerate() {
         let watermark = &watermarks[i];
         debug!("Applying watermark: {:?}", watermark);
-        let wm =
-            VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
+        let wm = VipsImage::new_from_buffer(&wm_buffer[..], "[access=VIPS_ACCESS_SEQUENTIAL]")?;
 
         let wm_width = wm.get_width();
         let wm_height = wm.get_height();
@@ -107,8 +107,7 @@ pub fn process_image(
         } else {
             wm
         };
-        final_image =
-            ops::composite2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
+        final_image = ops::composite2_with_opts(&final_image, &wm, ops::BlendMode::Over, &options)?;
     }
 
     debug!("Encoding to: {}", format);

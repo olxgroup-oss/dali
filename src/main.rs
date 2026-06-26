@@ -75,9 +75,9 @@ fn create_vips_app(config: &Configuration) -> Option<VipsApp> {
     Some(app)
 }
 
-fn create_watermarks_cache(config: &Configuration) -> Mutex<LruCache<String, Vec<u8>>> {
-    let cache_size = NonZeroUsize::new(config.watermark_cache_size.unwrap_or(100))
-        .unwrap_or(NonZeroUsize::new(100).unwrap());
+fn create_watermarks_cache(config: &Configuration) -> Mutex<LruCache<String, Arc<Vec<u8>>>> {
+    let cache_size = NonZeroUsize::new(config.watermark_cache_size.unwrap_or(50))
+        .unwrap_or(NonZeroUsize::new(50).unwrap());
     Mutex::new(LruCache::new(cache_size))
 }
 
@@ -96,7 +96,7 @@ pub struct AppState {
     vips_app: Arc<VipsApp>,
     image_provider: Arc<Box<dyn ImageProvider>>,
     config: Arc<Configuration>,
-    watermark_cache: Arc<Mutex<LruCache<String, Vec<u8>>>>,
+    watermark_cache: Arc<Mutex<LruCache<String, Arc<Vec<u8>>>>>,
 }
 
 async fn measure_request_handling_duration(

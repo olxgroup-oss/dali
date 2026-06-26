@@ -15,11 +15,12 @@ use opentelemetry::{
 };
 use serde::de::DeserializeOwned;
 use serde_json::json;
+use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
 
 #[cfg(feature = "opentelemetry")]
-use crate::commons::{open_telemetry::DEFAULT_OTEL_APPLICAITON_NAME};
+use crate::commons::open_telemetry::DEFAULT_OTEL_APPLICAITON_NAME;
 
 use crate::{
     commons::{ImageFormat, ProcessImageRequest},
@@ -158,34 +159,31 @@ pub async fn process_image(
         .await?;
     let mut total_input_size = main_img.bytes.len();
 
-    let watermarks_futures = params
-        .watermarks
-        .iter()
-        .map(|wm| {
-            let cache = watermark_cache.clone();
-            let provider = image_provider.clone();
-            let cfg = config.clone();
-            let address = wm.image_address.clone();
-            async move {
-                // Check cache first
-                {
-                    let mut cache_guard = cache.lock().await;
-                    if let Some(cached) = cache_guard.get(&address) {
-                        return Ok(cached.clone());
-                    }
+    let watermarks_futures = params.watermarks.iter().map(|wm| {
+        let cache = watermark_cache.clone();
+        let provider = image_provider.clone();
+        let cfg = config.clone();
+        let address = wm.image_address.clone();
+        async move {
+            // Check cache first
+            {
+                let mut cache_guard = cache.lock().await;
+                if let Some(cached) = cache_guard.get(&address) {
+                    return Ok(Arc::clone(cached));
                 }
-                // Cache miss — download
-                let result = provider.get_file(&address, &cfg).await?;
-                let bytes = result.bytes;
-                // Store in cache
-                {
-                    let mut cache_guard = cache.lock().await;
-                    cache_guard.put(address, bytes.clone());
-                }
-                Ok::<Vec<u8>, ImageProcessingError>(bytes)
             }
-        });
-    let watermarks: Vec<Vec<u8>> = join_all(watermarks_futures)
+            // Cache miss — download
+            let result = provider.get_file(&address, &cfg).await?;
+            let bytes = Arc::new(result.bytes);
+            // Store in cache
+            {
+                let mut cache_guard = cache.lock().await;
+                cache_guard.put(address, Arc::clone(&bytes));
+            }
+            Ok::<Arc<Vec<u8>>, ImageProcessingError>(bytes)
+        }
+    });
+    let watermarks: Vec<Arc<Vec<u8>>> = join_all(watermarks_futures)
         .await
         .into_iter()
         .filter(|r| {
