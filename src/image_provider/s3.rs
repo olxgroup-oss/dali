@@ -3,7 +3,7 @@ pub mod s3 {
     use aws_config::default_provider::credentials::DefaultCredentialsChain;
     use aws_sdk_s3::config::Builder;
     use aws_sdk_s3::error::SdkError;
-    use axum::http::{StatusCode, response};
+    use axum::http::{StatusCode};
     use log::error;
     use std::collections::HashMap;
     use std::io::Write;
