@@ -19,9 +19,8 @@ pub fn process_image(
         watermarks,
         rotation,
     } = parameters;
-    let exif_slice = &buffer[..buffer.len().min(65536)];
     let needs_rotation = rotation.is_some()
-        || match rexif::parse_buffer_quiet(exif_slice).0 {
+        || match rexif::parse_buffer_quiet(&buffer[..buffer.len().min(65536)]).0 {
             Ok(data) => data.entries.into_iter().any(|e| {
                 e.tag == rexif::ExifTag::Orientation
                     && e.value.to_i64(0).is_some()
