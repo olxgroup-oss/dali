@@ -133,6 +133,7 @@ pub async fn process_image(
         vips_app,
         image_provider,
         config,
+        watermark_cache,
     }): State<AppState>,
     ProcessImageRequestExtractor(params): ProcessImageRequestExtractor<ProcessImageRequest>,
 ) -> Result<Response<Body>, ImageProcessingError> {
@@ -160,8 +161,31 @@ pub async fn process_image(
     let watermarks_futures = params
         .watermarks
         .iter()
-        .map(|wm| image_provider.get_file(&wm.image_address, &config));
-    let watermarks = join_all(watermarks_futures)
+        .map(|wm| {
+            let cache = watermark_cache.clone();
+            let provider = image_provider.clone();
+            let cfg = config.clone();
+            let address = wm.image_address.clone();
+            async move {
+                // Check cache first
+                {
+                    let mut cache_guard = cache.lock().await;
+                    if let Some(cached) = cache_guard.get(&address) {
+                        return Ok(cached.clone());
+                    }
+                }
+                // Cache miss — download
+                let result = provider.get_file(&address, &cfg).await?;
+                let bytes = result.bytes;
+                // Store in cache
+                {
+                    let mut cache_guard = cache.lock().await;
+                    cache_guard.put(address, bytes.clone());
+                }
+                Ok::<Vec<u8>, ImageProcessingError>(bytes)
+            }
+        });
+    let watermarks: Vec<Vec<u8>> = join_all(watermarks_futures)
         .await
         .into_iter()
         .filter(|r| {
@@ -174,9 +198,9 @@ pub async fn process_image(
             r.is_ok()
         })
         .map(|r| {
-            let watermark = r.unwrap();
-            total_input_size += watermark.bytes.len();
-            watermark.bytes
+            let watermark_bytes = r.unwrap();
+            total_input_size += watermark_bytes.len();
+            watermark_bytes
         })
         .collect();
 

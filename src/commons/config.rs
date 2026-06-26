@@ -22,6 +22,7 @@ pub struct Configuration {
     pub s3_endpoint: Option<String>,
     pub s3_bucket: Option<String>,
     pub max_file_size: Option<u32>,
+    pub watermark_cache_size: Option<usize>,
     pub otel_collector_endpoint: Option<String>,
     pub otel_application_name: Option<String>,
 }
