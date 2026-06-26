@@ -20,7 +20,7 @@ pub fn process_image(
         rotation,
     } = parameters;
     let needs_rotation = rotation.is_some()
-        || match rexif::parse_buffer_quiet(&buffer[..buffer.len().min(65536)]).0 {
+        || match rexif::parse_buffer_quiet(&buffer[..]).0 {
             Ok(data) => data.entries.into_iter().any(|e| {
                 e.tag == rexif::ExifTag::Orientation
                     && e.value.to_i64(0).is_some()
