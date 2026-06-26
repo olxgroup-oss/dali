@@ -166,20 +166,14 @@ pub async fn process_image(
         let address = wm.image_address.clone();
         async move {
             // Check cache first
-            {
-                let mut cache_guard = cache.lock().await;
-                if let Some(cached) = cache_guard.get(&address) {
-                    return Ok(Arc::clone(cached));
-                }
+            if let Some(cached) = cache.get(&address).await {
+                return Ok(cached);
             }
             // Cache miss — download
             let result = provider.get_file(&address, &cfg).await?;
             let bytes = Arc::new(result.bytes);
             // Store in cache
-            {
-                let mut cache_guard = cache.lock().await;
-                cache_guard.put(address, Arc::clone(&bytes));
-            }
+            cache.insert(address, Arc::clone(&bytes)).await;
             Ok::<Arc<Vec<u8>>, ImageProcessingError>(bytes)
         }
     });
