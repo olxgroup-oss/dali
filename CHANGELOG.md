@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/olxgroup-oss/dali/compare/v2.6.0...v2.6.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **optimization:** optimize memory allocation ([#128](https://github.com/olxgroup-oss/dali/issues/128)) ([0b2451c](https://github.com/olxgroup-oss/dali/commit/0b2451c3e9b01055e5cbd6c983a29c3b3314f59f))
+
 # [2.6.0](https://github.com/olxgroup-oss/dali/compare/v2.5.2...v2.6.0) (2026-06-19)
 
 
