@@ -9,12 +9,12 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     build-base=0.5-r4 \
     clang18=18.1.8-r10 \
     clang16-libclang=16.0.6-r11 \
-    expat-dev=2.8.1-r0 \
+    expat-dev=2.8.2-r0 \
     giflib-dev=5.2.2-r1 \
-    glib-dev=2.88.1-r1 \
+    glib-dev=2.88.1-r2 \
     # [CHANGE 1] highway-dev enables SIMD acceleration in libvips (resize, colour conversion, etc.)
     # Without it, libvips falls back to scalar code paths that can be 2-4x slower.
-    highway-dev=1.3.0-r0 \
+    highway-dev=1.3.0-r2 \
     lcms2-dev=2.19-r0 \
     libexif-dev=0.6.26-r0 \
     libheif-dev=1.23.0-r0 \
@@ -24,11 +24,11 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     librsvg-dev=2.62.3-r0 \
     libwebp-dev=1.6.0-r0 \
     openssl-dev=3.5.7-r0 \
-    orc-dev=0.4.41-r0 \
-    pkgconf=2.5.1-r0 \
+    orc-dev=0.4.42-r0 \
+    pkgconf=2.9.95-r0 \
     tiff-dev=4.7.1-r0 \
     meson=1.11.1-r0 \
-    samurai=1.2-r8
+    samurai=1.3-r0
 
 RUN wget https://github.com/libvips/libvips/archive/refs/tags/v8.18.2.tar.gz && \
     mkdir /vips && \
@@ -59,9 +59,9 @@ COPY --from=build /usr/local/lib /usr/local/lib
 RUN apk add --update --no-cache \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/main \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/community \
-      expat=2.8.1-r0 \
+      expat=2.8.2-r0 \
       giflib=5.2.2-r1 \
-      glib=2.88.1-r1 \
+      glib=2.88.1-r2 \
       # [CHANGE 2] jemalloc replaces musl's default allocator at runtime via LD_PRELOAD (see ENV below).
       # musl's malloc uses a single global lock under contention, which bottlenecks libvips's
       # multi-threaded pipeline. jemalloc uses per-thread arenas, eliminating that contention.
@@ -79,8 +79,8 @@ RUN apk add --update --no-cache \
       libwebpdemux=1.6.0-r0 \
       libwebpmux=1.6.0-r0 \
       openssl=3.5.7-r0 \
-      orc=0.4.41-r0 \
-      libhwy=1.3.0-r0 \
+      orc=0.4.42-r0 \
+      libhwy=1.3.0-r2 \
       tiff=4.7.1-r0
 
 # Inject jemalloc as the allocator for the dali process.
