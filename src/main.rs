@@ -1,6 +1,7 @@
 // (c) Copyright 2019-2026 OLX
 use std::env;
 use std::sync::Arc;
+use std::time::Duration;
 use std::time::SystemTime;
 
 use axum::extract::Request;
@@ -10,6 +11,7 @@ use axum::response::IntoResponse;
 use axum::{routing::get, Router};
 use image_provider::{create_image_provider, ImageProvider};
 use libvips::VipsApp;
+use moka::future::Cache;
 
 use commons::config::Configuration;
 use routes::metric::HTTP_DURATION;
@@ -72,6 +74,15 @@ fn create_vips_app(config: &Configuration) -> Option<VipsApp> {
     Some(app)
 }
 
+fn create_watermarks_cache(config: &Configuration) -> Cache<String, Arc<Vec<u8>>> {
+    let cache_size = config.watermark_cache_size.unwrap_or(15);
+    let ttl = Duration::from_secs(config.watermark_cache_ttl_seconds.unwrap_or(28800)); // 8 hours
+    Cache::builder()
+        .max_capacity(cache_size)
+        .time_to_live(ttl)
+        .build()
+}
+
 async fn start_management_server(config: &Configuration) {
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
@@ -87,6 +98,7 @@ pub struct AppState {
     vips_app: Arc<VipsApp>,
     image_provider: Arc<Box<dyn ImageProvider>>,
     config: Arc<Configuration>,
+    watermark_cache: Cache<String, Arc<Vec<u8>>>,
 }
 
 async fn measure_request_handling_duration(
@@ -113,6 +125,7 @@ async fn start_main_server(config: &Configuration) {
         vips_app: Arc::new(create_vips_app(&config).unwrap()),
         image_provider: Arc::new(create_image_provider(&config).await),
         config: Arc::new(config.clone()),
+        watermark_cache: create_watermarks_cache(&config),
     };
 
     let app = Router::new()

@@ -15,11 +15,12 @@ use opentelemetry::{
 };
 use serde::de::DeserializeOwned;
 use serde_json::json;
+use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
 
 #[cfg(feature = "opentelemetry")]
-use crate::commons::{open_telemetry::DEFAULT_OTEL_APPLICAITON_NAME};
+use crate::commons::open_telemetry::DEFAULT_OTEL_APPLICAITON_NAME;
 
 use crate::{
     commons::{ImageFormat, ProcessImageRequest},
@@ -133,6 +134,7 @@ pub async fn process_image(
         vips_app,
         image_provider,
         config,
+        watermark_cache,
     }): State<AppState>,
     ProcessImageRequestExtractor(params): ProcessImageRequestExtractor<ProcessImageRequest>,
 ) -> Result<Response<Body>, ImageProcessingError> {
@@ -157,11 +159,25 @@ pub async fn process_image(
         .await?;
     let mut total_input_size = main_img.bytes.len();
 
-    let watermarks_futures = params
-        .watermarks
-        .iter()
-        .map(|wm| image_provider.get_file(&wm.image_address, &config));
-    let watermarks = join_all(watermarks_futures)
+    let watermarks_futures = params.watermarks.iter().map(|wm| {
+        let cache = watermark_cache.clone();
+        let provider = image_provider.clone();
+        let cfg = config.clone();
+        let address = wm.image_address.clone();
+        async move {
+            // Check cache first
+            if let Some(cached) = cache.get(&address).await {
+                return Ok(cached);
+            }
+            // Cache miss — download
+            let result = provider.get_file(&address, &cfg).await?;
+            let bytes = Arc::new(result.bytes);
+            // Store in cache
+            cache.insert(address, Arc::clone(&bytes)).await;
+            Ok::<Arc<Vec<u8>>, ImageProcessingError>(bytes)
+        }
+    });
+    let watermarks: Vec<Arc<Vec<u8>>> = join_all(watermarks_futures)
         .await
         .into_iter()
         .filter(|r| {
@@ -174,9 +190,9 @@ pub async fn process_image(
             r.is_ok()
         })
         .map(|r| {
-            let watermark = r.unwrap();
-            total_input_size += watermark.bytes.len();
-            watermark.bytes
+            let watermark_bytes = r.unwrap();
+            total_input_size += watermark_bytes.len();
+            watermark_bytes
         })
         .collect();
 

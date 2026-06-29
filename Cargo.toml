@@ -48,6 +48,7 @@ aws-credential-types = { version = "1.2.14", optional = true }
 async-trait = "0.1.89"
 thiserror = "2.0.18"
 rayon = "1.12.0"
+moka = { version = "0.12.15", features = ["future"] }
 opentelemetry = { version = "0.32.0", features = ["default"], optional = true }
 opentelemetry_sdk = { version = "0.32.1", features = ["rt-tokio", "internal-logs", "logs"], optional = true }
 opentelemetry-otlp = { version = "0.32.0", features = ["grpc-tonic", "gzip-tonic", "tls", "tls-roots", "internal-logs", "logs"], optional = true }
