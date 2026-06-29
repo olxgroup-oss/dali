@@ -1,3 +1,10 @@
+## [2.7.3](https://github.com/olxgroup-oss/dali/compare/v2.7.2...v2.7.3) (2026-06-29)
+
+
+### Bug Fixes
+
+* **otel:** adds request duration boundaries ([c4ef819](https://github.com/olxgroup-oss/dali/commit/c4ef8196e77e368d81b1fac4982bb5a6cd7e22d3))
+
 ## [2.7.2](https://github.com/olxgroup-oss/dali/compare/v2.7.1...v2.7.2) (2026-06-29)
 
 
