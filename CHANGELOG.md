@@ -12,6 +12,13 @@
 
 * **cache:** enable caching for watermarks ([#129](https://github.com/olxgroup-oss/dali/issues/129)) ([26dae92](https://github.com/olxgroup-oss/dali/commit/26dae9234e42bebfc94bec126113557f6bf28b5d))
 
+# [2.7.0](https://github.com/olxgroup-oss/dali/compare/v2.6.1...v2.7.0) (2026-06-29)
+
+
+### Features
+
+* **cache:** enable caching for watermarks ([#129](https://github.com/olxgroup-oss/dali/issues/129)) ([26dae92](https://github.com/olxgroup-oss/dali/commit/26dae9234e42bebfc94bec126113557f6bf28b5d))
+
 ## [2.6.1](https://github.com/olxgroup-oss/dali/compare/v2.6.0...v2.6.1) (2026-06-26)
 
 
