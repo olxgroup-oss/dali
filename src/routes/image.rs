@@ -10,7 +10,7 @@ use log::{debug, error, warn};
 #[cfg(feature = "opentelemetry")]
 use opentelemetry::{
     global::{self, BoxedSpan, ObjectSafeSpan},
-    trace::{SpanKind, Status, Tracer, TracerProvider},
+    trace::{Status, Tracer, TracerProvider},
     KeyValue,
 };
 use serde::de::DeserializeOwned;
@@ -18,9 +18,6 @@ use serde_json::json;
 use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
-
-#[cfg(feature = "opentelemetry")]
-use crate::commons::open_telemetry::DEFAULT_OTEL_APPLICAITON_NAME;
 
 use crate::{
     commons::{ImageFormat, ProcessImageRequest},
@@ -140,20 +137,11 @@ pub async fn process_image(
 ) -> Result<Response<Body>, ImageProcessingError> {
     #[cfg(feature = "opentelemetry")]
     let tracer = global::tracer_provider().tracer("Dali - Image Processing Tracer");
+    // The middleware starts the HTTP server span following the semantic
+    // conventions New Relic relies on; this span is an internal child that adds
+    // image-processing detail for the transaction segment breakdown.
     #[cfg(feature = "opentelemetry")]
-    let mut span = tracer
-        .span_builder("ImageProcessing")
-        .with_kind(SpanKind::Server)
-        .start(&tracer);
-    #[cfg(feature = "opentelemetry")]
-    {
-        let otel_application_name = config
-            .otel_application_name
-            .clone()
-            .unwrap_or(DEFAULT_OTEL_APPLICAITON_NAME.to_owned());
-        span.set_attribute(KeyValue::new("service.name", otel_application_name));
-        span.set_attribute(KeyValue::new("http.method", "GET"));
-    }
+    let mut span = tracer.start("ImageProcessing");
 
     let now = SystemTime::now();
     let main_img = image_provider
