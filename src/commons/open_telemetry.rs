@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use log::error;
 use log::warn;
-use opentelemetry::metrics::{Histogram, Meter};
+use opentelemetry::metrics::Histogram;
 use opentelemetry::trace::{SpanKind, Status, TraceContextExt, Tracer, TracerProvider};
 use opentelemetry::{global, Context, Key, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
@@ -18,7 +18,7 @@ use tonic::transport::ClientTlsConfig;
 
 use super::config::Configuration;
 
-pub const DEFAULT_OTEL_APPLICAITON_NAME: &str = "dali";
+const DEFAULT_OTEL_APPLICAITON_NAME: &str = "dali";
 
 pub async fn init_opentelemetry(config: &Configuration) {
     let otel_collector_endpoint = config.otel_collector_endpoint.clone();
@@ -32,7 +32,7 @@ pub async fn init_opentelemetry(config: &Configuration) {
         .unwrap_or(DEFAULT_OTEL_APPLICAITON_NAME.to_owned());
     let endpoint = otel_collector_endpoint.unwrap();
     init_global_tracer_provider(endpoint.clone(), otel_application_name.clone());
-    init_global_meter_provider(endpoint.clone(), otel_application_name.clone()).await;
+    init_global_meter_provider(endpoint, otel_application_name).await;
     schedule_memory_metrics().await;
 }
 
@@ -112,7 +112,6 @@ fn build_resource(otel_application_name: String) -> Resource {
         .is_some();
 
     let mut builder = Resource::builder().with_service_name(otel_application_name);
-
 
     if !has_host_name {
         if let Some(hostname) = hostname.clone() {
@@ -242,7 +241,7 @@ fn record_http_server_request_duration(
 
 async fn schedule_memory_metrics() {
     let _memory_task = task::spawn(async {
-        let meter: Meter = global::meter_provider().meter("Dali - Memory Meter");
+        let meter = global::meter_provider().meter("Dali - Memory Meter");
 
         let used_memory_gauge = meter
             .u64_gauge("dali_used_memory_mb")
