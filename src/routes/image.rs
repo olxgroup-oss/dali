@@ -6,11 +6,11 @@ use axum::{
 };
 use core::str;
 use futures::future::join_all;
-use log::{error, warn};
+use log::{debug, error, warn};
 #[cfg(feature = "opentelemetry")]
 use opentelemetry::{
     global::{self, BoxedSpan, ObjectSafeSpan},
-    trace::{Status, Tracer, TracerProvider},
+    trace::{SpanKind, Status, Tracer, TracerProvider},
     KeyValue,
 };
 use serde::de::DeserializeOwned;
@@ -141,7 +141,10 @@ pub async fn process_image(
     #[cfg(feature = "opentelemetry")]
     let tracer = global::tracer_provider().tracer("Dali - Image Processing Tracer");
     #[cfg(feature = "opentelemetry")]
-    let mut span = tracer.start("ImageProcessing");
+    let mut span = tracer
+        .span_builder("ImageProcessing")
+        .with_kind(SpanKind::Server)
+        .start(&tracer);
     #[cfg(feature = "opentelemetry")]
     {
         let otel_application_name = config
@@ -149,7 +152,6 @@ pub async fn process_image(
             .clone()
             .unwrap_or(DEFAULT_OTEL_APPLICAITON_NAME.to_owned());
         span.set_attribute(KeyValue::new("service.name", otel_application_name));
-        span.set_attribute(KeyValue::new("span.kind", "server"));
         span.set_attribute(KeyValue::new("http.method", "GET"));
     }
 
@@ -167,8 +169,10 @@ pub async fn process_image(
         async move {
             // Check cache first
             if let Some(cached) = cache.get(&address).await {
+                debug!("watermark cache hit for address: {}", address);
                 return Ok(cached);
             }
+            debug!("watermark cache miss for address: {}", address);
             // Cache miss — download
             let result = provider.get_file(&address, &cfg).await?;
             let bytes = Arc::new(result.bytes);
