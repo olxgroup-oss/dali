@@ -7,7 +7,7 @@ use log::error;
 use log::warn;
 use opentelemetry::metrics::{Histogram, Meter};
 use opentelemetry::trace::{SpanKind, Status, TraceContextExt, Tracer, TracerProvider};
-use opentelemetry::{global, Context, KeyValue};
+use opentelemetry::{global, Context, Key, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_otlp::WithTonicConfig;
 use opentelemetry_sdk::trace::{RandomIdGenerator, Sampler, SdkTracerProvider};
@@ -103,15 +103,31 @@ static HTTP_SERVER_REQUEST_DURATION: OnceLock<Histogram<f64>> = OnceLock::new();
 const OTEL_INSTRUMENTATION_SCOPE_NAME: &str = "dali";
 
 fn build_resource(otel_application_name: String) -> Resource {
+    let hostname = System::host_name();
+
+    let detected = Resource::builder().build();
+    let has_host_name = detected.get(&Key::from_static_str("host.name")).is_some();
+    let has_instance_id = detected
+        .get(&Key::from_static_str("service.instance.id"))
+        .is_some();
+
     let mut builder = Resource::builder().with_service_name(otel_application_name);
-    // `host.name` and `service.instance.id` are part of the resource attributes
-    // that New Relic copies onto the derived APM metrics and uses to identify the
-    // service instance.
-    if let Some(hostname) = System::host_name() {
-        builder = builder
-            .with_attribute(KeyValue::new("host.name", hostname.clone()))
-            .with_attribute(KeyValue::new("service.instance.id", hostname));
+
+
+    if !has_host_name {
+        if let Some(hostname) = hostname.clone() {
+            builder = builder.with_attribute(KeyValue::new("host.name", hostname));
+        }
     }
+
+    if !has_instance_id {
+        let instance_id = match hostname {
+            Some(hostname) => format!("{hostname}-{}", std::process::id()),
+            None => std::process::id().to_string(),
+        };
+        builder = builder.with_attribute(KeyValue::new("service.instance.id", instance_id));
+    }
+
     builder.build()
 }
 
@@ -127,12 +143,6 @@ fn init_http_server_request_duration_metric() {
     }
 }
 
-// Starts an OpenTelemetry server span following the HTTP semantic conventions.
-// New Relic derives APM transactions, distributed traces and the errors inbox
-// from these conventions, so the entry span must be of kind `Server` and expose
-// the `http.*`/`url.*` attributes. The returned `Context` carries the span so it
-// can be attached to the request handling future, making any span created while
-// handling the request a child of this entry span.
 pub fn start_http_server_span(
     http_request_method: &str,
     http_route: &str,
@@ -167,10 +177,6 @@ pub fn start_http_server_span(
     Context::current_with_span(span)
 }
 
-// Completes the server span started by `start_http_server_span` and records the
-// `http.server.request.duration` metric. New Relic relies on this metric (and the
-// `error.type` attribute) to drive throughput, response time and error rate, and
-// on the span status to populate the errors inbox.
 pub fn finish_http_server_span(
     otel_cx: &Context,
     http_request_method: &str,
@@ -184,9 +190,6 @@ pub fn finish_http_server_span(
         "http.response.status_code",
         i64::from(http_response_status_code),
     ));
-    // Per the OpenTelemetry HTTP semantic conventions only 5xx responses mark a
-    // server span as errored; 4xx are client faults and must not inflate the
-    // service error rate.
     if http_response_status_code >= 500 {
         span.set_attribute(KeyValue::new(
             "error.type",

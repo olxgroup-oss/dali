@@ -7,12 +7,6 @@ use axum::{
 use core::str;
 use futures::future::join_all;
 use log::{debug, error, warn};
-#[cfg(feature = "opentelemetry")]
-use opentelemetry::{
-    global::{self, BoxedSpan, ObjectSafeSpan},
-    trace::{Status, Tracer, TracerProvider},
-    KeyValue,
-};
 use serde::de::DeserializeOwned;
 use serde_json::json;
 use std::sync::Arc;
@@ -135,14 +129,6 @@ pub async fn process_image(
     }): State<AppState>,
     ProcessImageRequestExtractor(params): ProcessImageRequestExtractor<ProcessImageRequest>,
 ) -> Result<Response<Body>, ImageProcessingError> {
-    #[cfg(feature = "opentelemetry")]
-    let tracer = global::tracer_provider().tracer("Dali - Image Processing Tracer");
-    // The middleware starts the HTTP server span following the semantic
-    // conventions New Relic relies on; this span is an internal child that adds
-    // image-processing detail for the transaction segment breakdown.
-    #[cfg(feature = "opentelemetry")]
-    let mut span = tracer.start("ImageProcessing");
-
     let now = SystemTime::now();
     let main_img = image_provider
         .get_file(&params.image_address, &config)
@@ -207,27 +193,16 @@ pub async fn process_image(
     let processed_image = recv.await.map_err(|e| {
         let error_message = format!("failed to join the thread which process the image. error: {}", e);
         error!("{}", error_message);
-        #[cfg(feature = "opentelemetry")] {
-            span.set_status(Status::error(error_message));
-            span.end();
-        }
         ImageProcessingError::ProcessingWorkerJoinError
     })?
     .map_err(|e| {
         let error_message = format!("the image processing has failed for the resource with the error: {}. libvips raw error is: {}",
             e, vips_app.error_buffer().unwrap_or("").replace("\n", ". "));
         error!("{}", error_message);
-        #[cfg(feature = "opentelemetry")] {
-            span.set_status(Status::error(error_message));
-            span.end();
-        }
         ImageProcessingError::LibvipsProcessingFailed(e)
     })?;
 
-    #[cfg(not(feature = "opentelemetry"))]
     log_size_metrics(&format, total_input_size, processed_image.len());
-    #[cfg(feature = "opentelemetry")]
-    log_size_metrics_with_otel(&format, total_input_size, processed_image.len(), &mut span);
 
     let mut response_builder = Response::builder().status(StatusCode::OK);
     for (key, value) in main_img.response_headers.into_iter() {
@@ -236,18 +211,12 @@ pub async fn process_image(
         }
     }
 
-    #[cfg(feature = "opentelemetry")]
-    {
-        span.set_status(Status::Ok);
-        span.end();
-    }
     Ok(response_builder
         .header("Content-Type", format!("image/{}", format))
         .body(Body::from(processed_image))
         .unwrap())
 }
 
-#[cfg(not(feature = "opentelemetry"))]
 fn log_size_metrics(format: &ImageFormat, input_size: usize, response_length: usize) {
     match format {
         ImageFormat::Jpeg => {
@@ -263,38 +232,6 @@ fn log_size_metrics(format: &ImageFormat, input_size: usize, response_length: us
             OUTPUT_SIZE.webp.observe(response_length as f64);
         }
         ImageFormat::Png => {
-            INPUT_SIZE.png.observe(input_size as f64);
-            OUTPUT_SIZE.png.observe(response_length as f64);
-        }
-    }
-}
-
-#[cfg(feature = "opentelemetry")]
-fn log_size_metrics_with_otel(
-    format: &ImageFormat,
-    input_size: usize,
-    response_length: usize,
-    span: &mut BoxedSpan,
-) {
-    span.set_attribute(KeyValue::new("content-length", response_length as f64));
-    match format {
-        ImageFormat::Jpeg => {
-            span.set_attribute(KeyValue::new("content-type", "jpeg"));
-            INPUT_SIZE.jpeg.observe(input_size as f64);
-            OUTPUT_SIZE.jpeg.observe(response_length as f64);
-        }
-        ImageFormat::Heic => {
-            span.set_attribute(KeyValue::new("content-type", "heic"));
-            INPUT_SIZE.heic.observe(input_size as f64);
-            OUTPUT_SIZE.heic.observe(response_length as f64);
-        }
-        ImageFormat::Webp => {
-            span.set_attribute(KeyValue::new("content-type", "webp"));
-            INPUT_SIZE.webp.observe(input_size as f64);
-            OUTPUT_SIZE.webp.observe(response_length as f64);
-        }
-        ImageFormat::Png => {
-            span.set_attribute(KeyValue::new("content-type", "png"));
             INPUT_SIZE.png.observe(input_size as f64);
             OUTPUT_SIZE.png.observe(response_length as f64);
         }
