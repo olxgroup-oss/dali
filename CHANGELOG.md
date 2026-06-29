@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/olxgroup-oss/dali/compare/v2.7.0...v2.7.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* **otel:** fix otel and add enhanced logging for watermark caching ([2b3fac5](https://github.com/olxgroup-oss/dali/commit/2b3fac51180996c7ff0bd0aa7193abf4ed43ccd8))
+
 # [2.7.0](https://github.com/olxgroup-oss/dali/compare/v2.6.1...v2.7.0) (2026-06-29)
 
 
