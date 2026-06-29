@@ -1,3 +1,10 @@
+## [2.7.2](https://github.com/olxgroup-oss/dali/compare/v2.7.1...v2.7.2) (2026-06-29)
+
+
+### Bug Fixes
+
+* **otel:** enhance otel metrics ([#131](https://github.com/olxgroup-oss/dali/issues/131)) ([51b6810](https://github.com/olxgroup-oss/dali/commit/51b68101c31a3a74497e23a2130407809975faae))
+
 ## [2.7.1](https://github.com/olxgroup-oss/dali/compare/v2.7.0...v2.7.1) (2026-06-29)
 
 
