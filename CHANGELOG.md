@@ -1,3 +1,10 @@
+## [2.7.4](https://github.com/olxgroup-oss/dali/compare/v2.7.3...v2.7.4) (2026-06-30)
+
+
+### Bug Fixes
+
+* **otel:** optimize otel metrics exporter ([201f6e8](https://github.com/olxgroup-oss/dali/commit/201f6e86173b8d3c31d22041541a806a8c4b9604))
+
 ## [2.7.3](https://github.com/olxgroup-oss/dali/compare/v2.7.2...v2.7.3) (2026-06-29)
 
 
