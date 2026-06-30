@@ -71,6 +71,7 @@ async fn init_global_meter_provider(
 ) {
     let exporter = opentelemetry_otlp::MetricExporter::builder()
         .with_tonic()
+        .with_temporality(opentelemetry_sdk::metrics::Temporality::Delta)
         .with_protocol(opentelemetry_otlp::Protocol::Grpc)
         .with_endpoint(otel_collector_endpoint)
         .with_tls_config(ClientTlsConfig::new().with_native_roots())
@@ -137,7 +138,8 @@ fn init_http_server_request_duration_metric() {
         .with_unit("s")
         .with_description("Duration of HTTP server requests.")
         .with_boundaries(vec![
-            0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0,
+            0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.125, 0.15, 0.175, 0.2, 0.25, 0.3, 0.4, 0.5,
+            0.75, 1.0, 2.5, 5.0, 7.5, 10.0,
         ])
         .build();
     if HTTP_SERVER_REQUEST_DURATION.set(histogram).is_err() {
