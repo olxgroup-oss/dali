@@ -37,6 +37,34 @@
   },
   "packageRules": [
     {
+      "matchPackageNames": ["actix-web"],
+      "allowedVersions": "<= 2.0.0"
+    },
+    {
+      "matchPackageNames": ["actix-rt"],
+      "allowedVersions": "<= 1.0.1"
+    },
+    {
+      "matchPackageNames": ["actix-service"],
+      "allowedVersions": "<= 1.0.6"
+    },
+    {
+      "matchPackageNames": ["actix-http"],
+      "allowedVersions": "<= 1.0.1"
+    },
+    {
+      "matchPackageNames": ["serde"],
+      "allowedVersions": "<= 0.7.0"
+    },
+    {
+      "matchPackageNames": ["hyper"],
+      "allowedVersions": "<= 0.13.7"
+    },
+    {
+      "matchPackageNames": ["hyper-timeout"],
+      "allowedVersions": "<= 0.3.1"
+    },
+    {
       "description": "Automatically merge minor and patch-level updates without creating a PR",
       "matchUpdateTypes": [
         "minor",
