@@ -23,18 +23,16 @@ pub mod client {
     impl ReqwestImageProvider {
         pub async fn new(config: &Configuration) -> ReqwestImageProvider {
             let reqwest_client = Client::builder()
-                .timeout(Duration::from_millis(u64::from(
-                    config.reqwest_timeout_millis.unwrap_or(2000),
-                )))
-                .connect_timeout(Duration::from_millis(u64::from(
-                    config.reqwest_connection_timeout_millis.unwrap_or(2000),
-                )))
-                .pool_max_idle_per_host(usize::from(
-                    config.reqwest_pool_max_idle_per_host.unwrap_or(10),
+                .timeout(Duration::from_millis(
+                    config.reqwest_timeout_millis.unwrap_or(2_000),
                 ))
-                .pool_idle_timeout(Duration::from_millis(u64::from(
-                    config.reqwest_pool_idle_timeout_millis.unwrap_or(60000),
-                )))
+                .connect_timeout(Duration::from_millis(
+                    config.reqwest_connection_timeout_millis.unwrap_or(2_000),
+                ))
+                .pool_max_idle_per_host(config.reqwest_pool_max_idle_per_host.unwrap_or(512))
+                .pool_idle_timeout(Duration::from_millis(
+                    config.reqwest_pool_idle_timeout_millis.unwrap_or(90_000),
+                ))
                 .build();
             match reqwest_client {
                 Ok(c) => ReqwestImageProvider { client: c },
