@@ -1,7 +1,7 @@
 # (c) Copyright 2019-2026 OLX
 # We are manually installing and configuring libvips and each required package because previously when trying to use
 # the community built bundles (i.e. vips and vips-heif) the performace of Dali has been significantly degraded.
-FROM rust:1.96.0-alpine3.24 AS build
+FROM rust:1.98.1-alpine3.24 AS build
 
 WORKDIR /usr/src/dali
 RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/v3.24/main \
@@ -9,8 +9,8 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     build-base=0.5-r4 \
     clang18=18.1.8-r10 \
     clang16-libclang=16.0.6-r11 \
-    expat-dev=2.8.2-r0 \
-    giflib-dev=5.2.2-r1 \
+    expat-dev=2.8.4-r0 \
+    giflib-dev=5.2.2-r2 \
     glib-dev=2.88.1-r1 \
     # [CHANGE 1] highway-dev enables SIMD acceleration in libvips (resize, colour conversion, etc.)
     # Without it, libvips falls back to scalar code paths that can be 2-4x slower.
@@ -23,7 +23,7 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     libpng-dev=1.6.58-r1 \
     librsvg-dev=2.62.3-r0 \
     libwebp-dev=1.6.0-r0 \
-    openssl-dev=3.5.7-r0 \
+    openssl-dev=3.5.8-r0 \
     orc-dev=0.4.41-r0 \
     pkgconf=2.5.1-r0 \
     tiff-dev=4.7.1-r0 \
@@ -59,8 +59,8 @@ COPY --from=build /usr/local/lib /usr/local/lib
 RUN apk add --update --no-cache \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/main \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/community \
-      expat=2.8.2-r0 \
-      giflib=5.2.2-r1 \
+      expat=2.8.4-r0 \
+      giflib=5.2.2-r2 \
       glib=2.88.1-r1 \
       # [CHANGE 2] jemalloc replaces musl's default allocator at runtime via LD_PRELOAD (see ENV below).
       # musl's malloc uses a single global lock under contention, which bottlenecks libvips's
@@ -78,7 +78,7 @@ RUN apk add --update --no-cache \
       libwebp=1.6.0-r0 \
       libwebpdemux=1.6.0-r0 \
       libwebpmux=1.6.0-r0 \
-      openssl=3.5.7-r0 \
+      openssl=3.5.8-r0 \
       orc=0.4.41-r0 \
       libhwy=1.3.0-r0 \
       tiff=4.7.1-r0
