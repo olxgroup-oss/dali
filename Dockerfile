@@ -9,7 +9,7 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     build-base=0.5-r4 \
     clang18=18.1.8-r10 \
     clang16-libclang=16.0.6-r11 \
-    expat-dev=2.8.4-r0 \
+    expat-dev=2.8.5-r0 \
     giflib-dev=5.2.2-r2 \
     glib-dev=2.88.1-r1 \
     # [CHANGE 1] highway-dev enables SIMD acceleration in libvips (resize, colour conversion, etc.)
@@ -17,13 +17,13 @@ RUN apk add --update --no-cache --repository https://dl-cdn.alpinelinux.org/alpi
     highway-dev=1.3.0-r0 \
     lcms2-dev=2.19-r0 \
     libexif-dev=0.6.26-r0 \
-    libheif-dev=1.23.0-r0 \
+    libheif-dev=1.23.4-r0 \
     libimagequant-dev=4.2.2-r0 \
     libjpeg-turbo-dev=3.1.3-r0 \
-    libpng-dev=1.6.58-r1 \
+    libpng-dev=1.6.59-r0 \
     librsvg-dev=2.62.3-r0 \
     libwebp-dev=1.6.0-r0 \
-    openssl-dev=3.5.8-r0 \
+    openssl-dev=3.5.9-r0 \
     orc-dev=0.4.41-r0 \
     pkgconf=2.5.1-r0 \
     tiff-dev=4.7.1-r0 \
@@ -59,7 +59,7 @@ COPY --from=build /usr/local/lib /usr/local/lib
 RUN apk add --update --no-cache \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/main \
     --repository=https://dl-cdn.alpinelinux.org/alpine/v3.24/community \
-      expat=2.8.4-r0 \
+      expat=2.8.5-r0 \
       giflib=5.2.2-r2 \
       glib=2.88.1-r1 \
       # [CHANGE 2] jemalloc replaces musl's default allocator at runtime via LD_PRELOAD (see ENV below).
@@ -70,15 +70,15 @@ RUN apk add --update --no-cache \
       libde265=1.0.18-r0 \
       libexif=0.6.26-r0 \
       libgsf=1.14.58-r0 \
-      libheif=1.23.0-r0 \
+      libheif=1.23.4-r0 \
       libimagequant=4.2.2-r0 \
       libjpeg-turbo=3.1.3-r0 \
-      libpng=1.6.58-r1 \
+      libpng=1.6.59-r0 \
       librsvg=2.62.3-r0 \
       libwebp=1.6.0-r0 \
       libwebpdemux=1.6.0-r0 \
       libwebpmux=1.6.0-r0 \
-      openssl=3.5.8-r0 \
+      openssl=3.5.9-r0 \
       orc=0.4.41-r0 \
       libhwy=1.3.0-r0 \
       tiff=4.7.1-r0
