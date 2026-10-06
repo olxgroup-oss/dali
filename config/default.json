@@ -1,6 +1,6 @@
 {
-  "app_port": 8086,
-  "health_port": 8087,
+  "app_port": 8080,
+  "health_port": 8081,
   "log_level": "info",
   "reqwest_timeout_millis": 2000,
   "reqwest_connection_timeout_millis": 2000,
