@@ -71,6 +71,7 @@ RUN apk add --update --no-cache \
       libexif=0.6.26-r0 \
       libgsf=1.14.58-r0 \
       libheif=1.23.4-r0 \
+      libheif-x265=1.23.4-r0 \
       libimagequant=4.2.2-r0 \
       libjpeg-turbo=3.1.3-r0 \
       libpng=1.6.59-r0 \
