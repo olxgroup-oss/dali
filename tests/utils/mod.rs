@@ -112,6 +112,7 @@ impl RequestParametersBuilder {
 }
 
 pub fn assert_result(img: &[u8], image_address: &str) {
+    lazy_static::initialize(&VIPS_APP);
     let file_expected = format!("tests/results/{}", image_address);
     let img_result = VipsImage::new_from_buffer(img, "").expect("Unable to read image from dali");
     let img_expected =
