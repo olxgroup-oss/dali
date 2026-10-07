@@ -1,3 +1,10 @@
+## [2.7.5](https://github.com/olxgroup-oss/dali/compare/v2.7.4...v2.7.5) (2026-10-07)
+
+
+### Bug Fixes
+
+* **config:** set correct reqwest connection pool timeouts ([#133](https://github.com/olxgroup-oss/dali/issues/133)) ([e02789b](https://github.com/olxgroup-oss/dali/commit/e02789b08f16600ee6ec402a60b6e25156f0ce15))
+
 ## [2.7.4](https://github.com/olxgroup-oss/dali/compare/v2.7.3...v2.7.4) (2026-06-30)
 
 
