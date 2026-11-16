@@ -15,7 +15,9 @@
     ],
     "automerge": false
   },
-  "dependencyDashboard": true,
+  "dependencyDashboard": {
+    "enabled": true
+  },
   "configMigration": true,
   "commitMessageLowerCase": "auto",
   "timezone": "Europe/Berlin",
