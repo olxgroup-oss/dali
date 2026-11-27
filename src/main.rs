@@ -12,6 +12,7 @@ use axum::{routing::get, Router};
 use image_provider::{create_image_provider, ImageProvider};
 use libvips::VipsApp;
 use moka::future::Cache;
+use tokio::sync::watch;
 
 use commons::config::Configuration;
 use routes::metric::HTTP_DURATION;
@@ -27,13 +28,41 @@ mod routes;
 #[tokio::main]
 async fn main() {
     let config = Configuration::new().expect("Failed to load application configuration.");
+    set_up_logging(&config);
     println!(r#"{{"configuration": {}}}"#, config);
 
     #[cfg(feature = "opentelemetry")]
-    commons::open_telemetry::init_opentelemetry(&config).await;
+    let otel_runtime = commons::open_telemetry::init_opentelemetry(&config)
+        .await
+        .expect("Failed to initialize OpenTelemetry");
 
-    set_up_logging(&config);
-    let (_, _) = tokio::join!(start_main_server(&config), start_management_server(&config));
+    let (shutdown_tx, shutdown_rx) = watch::channel(false);
+    let signal_shutdown_tx = shutdown_tx.clone();
+    tokio::spawn(async move {
+        shutdown_signal().await;
+        let _ = signal_shutdown_tx.send(true);
+    });
+
+    let mut main_server = Box::pin(start_main_server(&config, shutdown_rx.clone()));
+    let mut management_server = Box::pin(start_management_server(&config, shutdown_rx));
+
+    let server_result = tokio::select! {
+        result = &mut main_server => {
+            let _ = shutdown_tx.send(true);
+            result.and(management_server.await)
+        }
+        result = &mut management_server => {
+            let _ = shutdown_tx.send(true);
+            result.and(main_server.await)
+        }
+    };
+
+    #[cfg(feature = "opentelemetry")]
+    if let Some(otel_runtime) = otel_runtime {
+        otel_runtime.shutdown().await;
+    }
+
+    server_result.expect("HTTP server failed");
 }
 
 fn set_up_logging(config: &Configuration) {
@@ -86,14 +115,17 @@ fn create_watermarks_cache(config: &Configuration) -> Cache<String, Arc<Vec<u8>>
         .build()
 }
 
-async fn start_management_server(config: &Configuration) {
+async fn start_management_server(
+    config: &Configuration,
+    shutdown: watch::Receiver<bool>,
+) -> std::io::Result<()> {
     let app = Router::new()
         .route("/health", get(|| async { StatusCode::OK }))
         .route("/metrics", get(routes::metric::handle_prometheus_scrapping));
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.health_port))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.health_port)).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(wait_for_shutdown(shutdown))
         .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
 }
 
 #[derive(Clone)]
@@ -112,6 +144,7 @@ async fn measure_request_handling_duration(
 
     #[cfg(feature = "opentelemetry")]
     let res = {
+        let parent_context = commons::open_telemetry::extract_http_context(req.headers());
         let http_request_method = req.method().as_str().to_owned();
         let http_route = req
             .extensions()
@@ -134,6 +167,7 @@ async fn measure_request_handling_duration(
         };
 
         let otel_cx = commons::open_telemetry::start_http_server_span(
+            &parent_context,
             &http_request_method,
             &http_route,
             &url_scheme,
@@ -173,7 +207,10 @@ async fn measure_request_handling_duration(
     Ok(res)
 }
 
-async fn start_main_server(config: &Configuration) {
+async fn start_main_server(
+    config: &Configuration,
+    shutdown: watch::Receiver<bool>,
+) -> std::io::Result<()> {
     let app_state = AppState {
         vips_app: Arc::new(create_vips_app(&config).unwrap()),
         image_provider: Arc::new(create_image_provider(&config).await),
@@ -186,8 +223,38 @@ async fn start_main_server(config: &Configuration) {
         .with_state(app_state)
         .layer(middleware::from_fn(measure_request_handling_duration));
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.app_port))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.app_port)).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(wait_for_shutdown(shutdown))
         .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
+}
+
+async fn wait_for_shutdown(mut shutdown: watch::Receiver<bool>) {
+    if !*shutdown.borrow() {
+        let _ = shutdown.changed().await;
+    }
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl-C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .expect("Failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        () = ctrl_c => {},
+        () = terminate => {},
+    }
 }

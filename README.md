@@ -31,6 +31,8 @@ All configuration should be provided through either a json config file or enviro
 | `s3_endpoint`                       | String                                | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. This configuration property is only needed for the local dev environment where MinIO is used to emulate S3.                                                                                                  | N (only in S3 mode)        | -                                                                                       | it's only needed when wanting to use MinIO for the local development environment. has to be ommited when using Dali in production with the real S3 |
 | `s3_bucket`                         | String                                | Only applicable when running Dali with the `s3` feature which implies that the images that have to be processed are stored in an S3 bucket. The name of the S3 bucket from where Dali will download the images that need processing.                                                                                                                     | Y (only in S3 mode)        | -                                                                                       | if not provided Dali panics while trying to instantiate the S3 client                                                                             |
 | `max_file_size`                     | integer                               | Maximum allowed size for the file to be processed. If the file size exceeds this limit, the download will be aborted.                                                                                                                                                                                                                                    | N                          | -                                                                                       | if not provided, Dali will not check the file size                                                                                                |
+| `otel_collector_endpoint`           | String                                | OTLP/gRPC collector endpoint. OpenTelemetry is disabled when omitted.                                                                                                                                                                                                                                                                                    | N                          | -                                                                                       | Requires a build with the `opentelemetry` feature.                                                                                                |
+| `otel_application_name`             | String                                | OpenTelemetry `service.name`.                                                                                                                                                                                                                                                                                                                            | N                          | -                                                                                       | Defaults to `dali`.                                                                                                                               |
 
 The application will compute the number of threads by the following formula: `pod_number_of_cpus * cpu_usage_percentage / 100`. This number will be divided by 2 and half will be assigned to the HTTP connection listener and half will be assigned to `libvips` (the image library). An extra worker will be created to listen to the `health` endpoint (this was done to be sure the application won't block the `health` endpoint even when overloaded).
 
@@ -52,6 +54,16 @@ Using `rustup` is the recommended way to install `rust`. It is a tool that manag
 To build and run the application, run the following command:
 
 ``` cargo run ```
+
+To run with OpenTelemetry tracing and metrics:
+
+```bash
+cargo run --features opentelemetry
+```
+
+The instrumented build extracts W3C Trace Context and Baggage from incoming
+requests, propagates context to outbound HTTP image requests, and flushes
+telemetry during graceful shutdown.
 
 _Note: if you're building the application on a `linux musl` system, you'll need to set this env variable: `RUSTFLAGS='-C target-feature=-crt-static'`_
 _if it fails to compile because of the linker, try to add the result of `pkg-config --libs vips` to `RUSTFLAGS=` env variable`_

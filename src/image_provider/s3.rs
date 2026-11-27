@@ -3,7 +3,7 @@ pub mod s3 {
     use aws_config::default_provider::credentials::DefaultCredentialsChain;
     use aws_sdk_s3::config::Builder;
     use aws_sdk_s3::error::SdkError;
-    use axum::http::{StatusCode};
+    use axum::http::StatusCode;
     use log::error;
     use std::collections::HashMap;
     use std::io::Write;
@@ -11,13 +11,17 @@ pub mod s3 {
     use async_trait::async_trait;
     use aws_config::{BehaviorVersion, Region};
     use aws_sdk_s3::error::ProvideErrorMetadata;
+    #[cfg(feature = "opentelemetry")]
+    use opentelemetry::{trace::FutureExt, KeyValue};
 
     use crate::commons::config::Configuration;
+    #[cfg(feature = "opentelemetry")]
+    use crate::commons::open_telemetry;
     use crate::image_provider::ImageResponse;
     use crate::image_provider::{
         ImageProcessingError::{
-            self, ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
-            InvalidResourceUriProvided, FileSizeExceeded,
+            self, ClientReturnedErrorStatusCode, FileSizeExceeded, ImageDownloadFailed,
+            ImageDownloadTimedOut, InvalidResourceUriProvided,
         },
         ImageProvider,
     };
@@ -72,16 +76,12 @@ pub mod s3 {
                 bucket: s3_bucket.as_ref().unwrap().clone(),
             }
         }
-    }
 
-    #[async_trait]
-    impl ImageProvider for S3ImageProvider {
-        async fn get_file(&self, resource: &str, config: &Configuration) -> Result<ImageResponse, ImageProcessingError> {
-            if String::from(resource).is_empty() {
-                error!("the provided resource uri is empty");
-                return Err(InvalidResourceUriProvided(String::new()));
-            }
-
+        async fn download_file(
+            &self,
+            resource: &str,
+            config: &Configuration,
+        ) -> Result<ImageResponse, ImageProcessingError> {
             let mut result = self
                 .s3_client
                 .get_object()
@@ -101,20 +101,15 @@ pub mod s3 {
                             ImageDownloadTimedOut
                         }
                         SdkError::ServiceError(_) => match e.code() {
-                            Some(err_code) if err_code == "NoSuchKey" => {
-                                ClientReturnedErrorStatusCode(
-                                    StatusCode::NOT_FOUND.as_u16(),
-                                    String::from(resource),
-                                )
-                            }
-                            Some(err_code) if err_code == "AccessDenied" => {
-                                ClientReturnedErrorStatusCode(
-                                    StatusCode::FORBIDDEN.as_u16(),
-                                    String::from(resource),
-                                )
-                            }
-                            // the next case is only needed for the local development environemnt
-                            Some(err_code) if err_code == "XMinioInvalidObjectName" => {
+                            Some("NoSuchKey") => ClientReturnedErrorStatusCode(
+                                StatusCode::NOT_FOUND.as_u16(),
+                                String::from(resource),
+                            ),
+                            Some("AccessDenied") => ClientReturnedErrorStatusCode(
+                                StatusCode::FORBIDDEN.as_u16(),
+                                String::from(resource),
+                            ),
+                            Some("XMinioInvalidObjectName") => {
                                 error!("invalid S3 key was provided: '{}'", resource);
                                 InvalidResourceUriProvided(String::from(resource))
                             }
@@ -134,10 +129,7 @@ pub mod s3 {
                     .map(|(key, value)| {
                         let mut response_header_key = String::from("x-amz-meta-");
                         response_header_key.push_str(key);
-                        (
-                            response_header_key,
-                            value.as_bytes().to_vec(),
-                        )
+                        (response_header_key, value.as_bytes().to_vec())
                     })
                     .collect(),
             };
@@ -173,6 +165,49 @@ pub mod s3 {
                 bytes: binary_payload,
                 response_headers: headers,
             })
+        }
+    }
+
+    #[async_trait]
+    impl ImageProvider for S3ImageProvider {
+        async fn get_file(
+            &self,
+            resource: &str,
+            config: &Configuration,
+        ) -> Result<ImageResponse, ImageProcessingError> {
+            if String::from(resource).is_empty() {
+                error!("the provided resource uri is empty");
+                return Err(InvalidResourceUriProvided(String::new()));
+            }
+
+            #[cfg(feature = "opentelemetry")]
+            let fetch_context = open_telemetry::start_client_span(
+                "S3 GetObject".to_owned(),
+                vec![
+                    KeyValue::new("rpc.system", "aws-api"),
+                    KeyValue::new("rpc.service", "S3"),
+                    KeyValue::new("rpc.method", "GetObject"),
+                    KeyValue::new("aws.s3.bucket", self.bucket.clone()),
+                ],
+            );
+
+            let download = self.download_file(resource, config);
+            #[cfg(feature = "opentelemetry")]
+            let result = download.with_context(fetch_context.clone()).await;
+            #[cfg(not(feature = "opentelemetry"))]
+            let result = download.await;
+
+            #[cfg(feature = "opentelemetry")]
+            {
+                let error_type = result
+                    .as_ref()
+                    .err()
+                    .map(ImageProcessingError::otel_error_type);
+                let error_message = result.as_ref().err().map(ToString::to_string);
+                open_telemetry::finish_client_span(&fetch_context, error_type, error_message);
+            }
+
+            result
         }
     }
 }

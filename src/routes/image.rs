@@ -76,6 +76,36 @@ pub enum ImageProcessingError {
     FileSizeExceeded(u32),
 }
 
+impl ImageProcessingError {
+    #[cfg(any(feature = "opentelemetry", test))]
+    pub(crate) fn otel_error_type(&self) -> String {
+        match self {
+            Self::InvalidResourceUriProvided(_) => "invalid_resource_uri".to_owned(),
+            Self::ImageDownloadTimedOut => "timeout".to_owned(),
+            Self::ClientReturnedErrorStatusCode(status, _) => status.to_string(),
+            Self::ImageDownloadFailed => "image_download_failed".to_owned(),
+            Self::ProcessingWorkerJoinError => "processing_worker_join_error".to_owned(),
+            Self::LibvipsProcessingFailed(_) => "libvips_processing_failed".to_owned(),
+            Self::FileSizeExceeded(_) => "file_size_exceeded".to_owned(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod error_tests {
+    use super::ImageProcessingError;
+
+    #[test]
+    fn otel_error_type_does_not_include_resource_uri() {
+        let error = ImageProcessingError::ClientReturnedErrorStatusCode(
+            403,
+            "https://example.com/image?signature=secret".to_owned(),
+        );
+
+        assert_eq!(error.otel_error_type(), "403");
+    }
+}
+
 impl IntoResponse for ImageProcessingError {
     fn into_response(self) -> axum::response::Response {
         error!(
