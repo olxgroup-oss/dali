@@ -8,10 +8,18 @@ pub mod client {
     use log::error;
     use reqwest::{Client, Url};
 
+    #[cfg(feature = "opentelemetry")]
+    use opentelemetry::{
+        trace::{FutureExt, TraceContextExt},
+        KeyValue,
+    };
+
     use crate::commons::config::Configuration;
+    #[cfg(feature = "opentelemetry")]
+    use crate::commons::open_telemetry;
     use crate::image_provider::ImageProcessingError::{
-        ClientReturnedErrorStatusCode, ImageDownloadFailed, ImageDownloadTimedOut,
-        InvalidResourceUriProvided, FileSizeExceeded
+        ClientReturnedErrorStatusCode, FileSizeExceeded, ImageDownloadFailed,
+        ImageDownloadTimedOut, InvalidResourceUriProvided,
     };
     use crate::image_provider::{ImageProvider, ImageResponse};
     use crate::routes::image::ImageProcessingError;
@@ -49,7 +57,11 @@ pub mod client {
 
     #[async_trait]
     impl ImageProvider for ReqwestImageProvider {
-        async fn get_file(&self, resource: &str, config: &Configuration) -> Result<ImageResponse, ImageProcessingError> {
+        async fn get_file(
+            &self,
+            resource: &str,
+            config: &Configuration,
+        ) -> Result<ImageResponse, ImageProcessingError> {
             let url = Url::parse(resource).map_err(|_| {
                 error!(
                     "the provided resource uri is not a valid http url: '{}'",
@@ -57,80 +69,129 @@ pub mod client {
                 );
                 InvalidResourceUriProvided(String::from(resource))
             })?;
-            let response = self.client.get(url).send().await.map_err(|e| {
-                if e.is_timeout() {
-                    error!(
-                        "request for downloading the image '{}' timed out. error: {}",
-                        resource, e
-                    );
-                    ImageDownloadTimedOut
-                } else {
-                    error!("error downloading the image: '{}'. error: {}", resource, e);
-                    ImageDownloadFailed
-                }
+
+            let request = self.client.get(url.clone()).build().map_err(|error| {
+                error!("failed to build the image download request: {error}");
+                ImageDownloadFailed
             })?;
-            
-            let status = response.status();
-            let headers = response
-                .headers()
-                .into_iter()
-                .map(|header| {
-                    (
-                        String::from(header.0.as_str()),
-                        header.1.as_bytes().to_vec(),
-                    )
-                })
-                .collect();
-            if status.is_success() {
-                let response_length = response.content_length().unwrap_or(0);
-                let mut stream = response.bytes_stream();
-                let mut total_bytes = 0;
-                let mut binary_payload: Vec<u8> = Vec::with_capacity(response_length as usize);
-                while let Some(bytes) = stream.try_next().await.map_err(|e| {
-                    error!(
-                        "failed to read the binary payload of the image '{}'. error: {}",
-                        resource, e
-                    );
-                    ImageDownloadFailed
-                })? {
-                    if let Some(max_size) = config.max_file_size {
-                        total_bytes += bytes.len() as u32;
-                        if total_bytes > max_size {
-                            error!(
-                                "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
-                                resource, max_size
-                            );
-                            return Err(FileSizeExceeded(max_size));
-                        }
-                    }
-                    binary_payload.write_all(&bytes).map_err(|e| {
+
+            #[cfg(feature = "opentelemetry")]
+            let fetch_context = open_telemetry::start_client_span(
+                "GET".to_owned(),
+                vec![
+                    KeyValue::new("http.request.method", "GET"),
+                    KeyValue::new(
+                        "server.address",
+                        url.host_str().unwrap_or_default().to_owned(),
+                    ),
+                    KeyValue::new("url.scheme", url.scheme().to_owned()),
+                ],
+            );
+
+            #[cfg(feature = "opentelemetry")]
+            let mut request = request;
+            #[cfg(feature = "opentelemetry")]
+            open_telemetry::inject_http_context(&fetch_context, request.headers_mut());
+
+            let download = async {
+                let response = self.client.execute(request).await.map_err(|e| {
+                    if e.is_timeout() {
                         error!(
-                        "failed to read the response for the file '{}'. error: '{}'",
-                        resource, e
-                    );
+                            "request for downloading the image '{}' timed out. error: {}",
+                            resource, e
+                        );
+                        ImageDownloadTimedOut
+                    } else {
+                        error!("error downloading the image: '{}'. error: {}", resource, e);
                         ImageDownloadFailed
-                    })?;
+                    }
+                })?;
+
+                let status = response.status();
+                #[cfg(feature = "opentelemetry")]
+                fetch_context.span().set_attribute(KeyValue::new(
+                    "http.response.status_code",
+                    i64::from(status.as_u16()),
+                ));
+
+                let headers = response
+                    .headers()
+                    .into_iter()
+                    .map(|header| {
+                        (
+                            String::from(header.0.as_str()),
+                            header.1.as_bytes().to_vec(),
+                        )
+                    })
+                    .collect();
+                if status.is_success() {
+                    let response_length = response.content_length().unwrap_or(0);
+                    let mut stream = response.bytes_stream();
+                    let mut total_bytes = 0;
+                    let mut binary_payload: Vec<u8> = Vec::with_capacity(response_length as usize);
+                    while let Some(bytes) = stream.try_next().await.map_err(|e| {
+                        error!(
+                            "failed to read the binary payload of the image '{}'. error: {}",
+                            resource, e
+                        );
+                        ImageDownloadFailed
+                    })? {
+                        if let Some(max_size) = config.max_file_size {
+                            total_bytes += bytes.len() as u32;
+                            if total_bytes > max_size {
+                                error!(
+                                    "the downloaded image '{}' exceeds the maximum allowed size of {} bytes",
+                                    resource, max_size
+                                );
+                                return Err(FileSizeExceeded(max_size));
+                            }
+                        }
+                        binary_payload.write_all(&bytes).map_err(|e| {
+                            error!(
+                                "failed to read the response for the file '{}'. error: '{}'",
+                                resource, e
+                            );
+                            ImageDownloadFailed
+                        })?;
+                    }
+                    Ok(ImageResponse {
+                        bytes: binary_payload,
+                        response_headers: headers,
+                    })
+                } else if status.is_client_error() {
+                    error!(
+                        "the requested image '{}' couldn't be downloaded. received status code: {}",
+                        resource, status
+                    );
+                    Err(ClientReturnedErrorStatusCode(
+                        status.as_u16(),
+                        String::from(resource),
+                    ))
+                } else {
+                    error!(
+                        "failed to download the specified resource. received status code: {}",
+                        status.as_str()
+                    );
+                    Err(ImageDownloadFailed)
                 }
-                Ok(ImageResponse {
-                    bytes: binary_payload,
-                    response_headers: headers,
-                })
-            } else if status.is_client_error() {
-                error!(
-                    "the requested image '{}' couldn't be downloaded. received status code: {}",
-                    resource, status
-                );
-                Err(ClientReturnedErrorStatusCode(
-                    status.as_u16(),
-                    String::from(resource),
-                ))
-            } else {
-                error!(
-                    "failed to download the specified resource. received status code: {}",
-                    status.as_str()
-                );
-                Err(ImageDownloadFailed)
+            };
+
+            #[cfg(feature = "opentelemetry")]
+            let result = download.with_context(fetch_context.clone()).await;
+            #[cfg(not(feature = "opentelemetry"))]
+            let result = download.await;
+
+            #[cfg(feature = "opentelemetry")]
+            {
+                let error_type = result
+                    .as_ref()
+                    .err()
+                    .map(ImageProcessingError::otel_error_type);
+                let error_message = result.as_ref().err().map(ToString::to_string);
+                open_telemetry::finish_client_span(&fetch_context, error_type, error_message);
             }
+
+            result
         }
     }
 }

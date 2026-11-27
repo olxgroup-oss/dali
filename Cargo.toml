@@ -24,7 +24,7 @@ opentelemetry = [
 ]
 
 [dependencies]
-tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros"] }
+tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros", "signal", "sync"] }
 axum = { version = "0.8.9", features = ["tokio"] }
 tower = { version = "0.5.3", features = ["timeout"] }
 futures = "0.3.32"
